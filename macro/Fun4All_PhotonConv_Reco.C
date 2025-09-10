@@ -250,8 +250,8 @@ void Fun4All_PhotonConv_Reco(
     TString PhotonConv_outfile = PhotonConv_reco_dir + PhotonConv_reco_filename;
     std::cout<<"outfile "<<PhotonConv_outfile<<std::endl;
     {
-      std::string makeDirectory = "mkdir -p " + PhotonConv_reco_dir;
-      system(makeDirectory.c_str());
+        std::string makeDirectory = "mkdir -p " + PhotonConv_reco_dir;
+        system(makeDirectory.c_str());
     }
     std::string PhotonConv_outfile_string(PhotonConv_outfile.Data());
     KFPReco("PhotonConvReco", "[gamma -> e+ e-]cc", PhotonConv_outfile_string);
@@ -261,11 +261,11 @@ void Fun4All_PhotonConv_Reco(
     TString PhotonConv_likesign_outfile = PhotonConv_reco_likesign_dir + PhotonConv_reco_likesign_filename;
     std::cout<<"outfile "<<PhotonConv_likesign_outfile<<std::endl;
     {
-      std::string makeDirectory = "mkdir -p " + PhotonConv_reco_likesign_dir;
-      system(makeDirectory.c_str());
+        std::string makeDirectory = "mkdir -p " + PhotonConv_reco_likesign_dir;
+        system(makeDirectory.c_str());
     }
     std::string PhotonConv_outfile_likesign_string(PhotonConv_likesign_outfile.Data());
-    KFPReco("PhotonConvReco_likesign", "[gamma -> e+ e-]cc", PhotonConv_outfile_likesign_string);
+    KFPReco("PhotonConvReco_likesign", "[gamma -> e+ e+]cc", PhotonConv_outfile_likesign_string);
 
     se->skip(stepsize*index);
     se->run(nEvents);
@@ -276,10 +276,10 @@ void Fun4All_PhotonConv_Reco(
     ifstream file_PhotonConv_outfile_string(PhotonConv_outfile_string.c_str(), ios::binary | ios::ate);
     if (file_PhotonConv_outfile_string.good() && (file_PhotonConv_outfile_string.tellg() > 100))
     {
-      string outputDirMove = outdir + "/PhotonConv_reco/Reconstructed/" + to_string(runnumber) + "/";
+        string outputDirMove = outdir + "/PhotonConv_reco/Reconstructed/" + to_string(runnumber) + "/";
         string makeDirectoryMove = "mkdir -p " + outputDirMove;
         system(makeDirectoryMove.c_str());
-      string moveOutput = "mv " + PhotonConv_outfile_string + " " + outputDirMove;
+        string moveOutput = "mv " + PhotonConv_outfile_string + " " + outputDirMove;
         std::cout << "moveOutput: " << moveOutput << std::endl;
         system(moveOutput.c_str());
     }
