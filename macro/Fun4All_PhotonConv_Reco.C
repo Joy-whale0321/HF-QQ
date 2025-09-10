@@ -273,8 +273,8 @@ void Fun4All_PhotonConv_Reco(
     se->PrintTimer();
     CDBInterface::instance()->Print();
 
-    ifstream file_Q2ee_outfile_string(Q2ee_outfile_string.c_str(), ios::binary | ios::ate);
-    if (file_Q2ee_outfile_string.good() && (file_Q2ee_outfile_string.tellg() > 100))
+    ifstream file_PhotonConv_outfile_string(PhotonConv_outfile_string.c_str(), ios::binary | ios::ate);
+    if (file_PhotonConv_outfile_string.good() && (file_PhotonConv_outfile_string.tellg() > 100))
     {
       string outputDirMove = outdir + "/Jpsi2ee_reco/Reconstructed/" + to_string(runnumber) + "/";
         string makeDirectoryMove = "mkdir -p " + outputDirMove;
