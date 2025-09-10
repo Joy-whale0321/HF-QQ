@@ -80,7 +80,7 @@ R__LOAD_LIBRARY(libepd.so)
 R__LOAD_LIBRARY(libzdcinfo.so)
 
 void Fun4All_PhotonConv_Reco(
-    const int nEvents = 10,
+    const int nEvents = 100,
     const std::string trkr_clusterfilename = "DST_TRKR_CLUSTER_run2pp_ana494_2024p021_v001-00053877-00000.root",
     const std::string trkr_clusterdir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana494_2024p021_v001/DST_TRKR_CLUSTER/run_00053800_00053900/dst/",
     const std::string trkr_trackfilename = "DST_TRKR_TRACKS_run2pp_ana495_2024p021_v001-00053877-00000.root",
