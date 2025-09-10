@@ -254,10 +254,10 @@ void Fun4All_PhotonConv_Reco(
       system(makeDirectory.c_str());
     }
     std::string PhotonConv_outfile_string(PhotonConv_outfile.Data());
-    KFPReco("PhotonConvReco", "[J/psi -> e^+ e^-]cc", PhotonConv_outfile_string);
+    KFPReco("PhotonConvReco", "[gamma -> e+ e-]cc", PhotonConv_outfile_string);
 
-    std::string PhotonConv_reco_likesign_dir = outdir + "/Jpsi2ee_reco_likesign/inReconstruction/" + to_string  (runnumber) + "/";
-    std::string PhotonConv_reco_likesign_filename = kfp_header + "Jpsi2ee_reco_likesign" + trailer;
+    std::string PhotonConv_reco_likesign_dir = outdir + "/PhotonConv_reco_likesign/inReconstruction/" + to_string  (runnumber) + "/";
+    std::string PhotonConv_reco_likesign_filename = kfp_header + "PhotonConv_reco_likesign" + trailer;
     TString PhotonConv_likesign_outfile = PhotonConv_reco_likesign_dir + PhotonConv_reco_likesign_filename;
     std::cout<<"outfile "<<PhotonConv_likesign_outfile<<std::endl;
     {
@@ -265,7 +265,7 @@ void Fun4All_PhotonConv_Reco(
       system(makeDirectory.c_str());
     }
     std::string PhotonConv_outfile_likesign_string(PhotonConv_likesign_outfile.Data());
-    KFPReco("PhotonConvReco_likesign", "[J/psi -> e^+ e^+]cc", PhotonConv_outfile_likesign_string);
+    KFPReco("PhotonConvReco_likesign", "[gamma -> e+ e-]cc", PhotonConv_outfile_likesign_string);
 
     se->skip(stepsize*index);
     se->run(nEvents);
@@ -276,7 +276,7 @@ void Fun4All_PhotonConv_Reco(
     ifstream file_PhotonConv_outfile_string(PhotonConv_outfile_string.c_str(), ios::binary | ios::ate);
     if (file_PhotonConv_outfile_string.good() && (file_PhotonConv_outfile_string.tellg() > 100))
     {
-      string outputDirMove = outdir + "/Jpsi2ee_reco/Reconstructed/" + to_string(runnumber) + "/";
+      string outputDirMove = outdir + "/PhotonConv_reco/Reconstructed/" + to_string(runnumber) + "/";
         string makeDirectoryMove = "mkdir -p " + outputDirMove;
         system(makeDirectoryMove.c_str());
       string moveOutput = "mv " + PhotonConv_outfile_string + " " + outputDirMove;
@@ -287,7 +287,7 @@ void Fun4All_PhotonConv_Reco(
     ifstream file_PhotonConv_outfile_likesign_string(PhotonConv_outfile_likesign_string.c_str(), ios::binary | ios::ate);
     if (file_PhotonConv_outfile_likesign_string.good() && (file_PhotonConv_outfile_likesign_string.tellg() > 100))
     {
-        string outputDirMove = outdir + "/Jpsi2ee_reco_likesign/Reconstructed/" + to_string(runnumber) + "/";
+        string outputDirMove = outdir + "/PhotonConv_reco_likesign/Reconstructed/" + to_string(runnumber) + "/";
         string makeDirectoryMove = "mkdir -p " + outputDirMove;
         system(makeDirectoryMove.c_str());
         string moveOutput = "mv " + PhotonConv_outfile_likesign_string + " " + outputDirMove;
