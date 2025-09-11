@@ -87,7 +87,7 @@ void Fun4All_PhotonConv_Reco(
     const std::string trkr_trackdir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana506_2024p023_v001/DST_TRKR_TRACKS/run_00053800_00053900/dst/",
     // const std::string calofilename = "DST_CALO_run2pp_ana468_2024p012_v001-00053877-00000.root",
     // const std::string calodir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana468_2024p012_v001/DST_CALO/run_00053800_00053900/dst/",
-    const std::string calofilename = "DST_CALOFITTING_run2pp_ana468_2024p012_v001-00053877-00001.root",
+    const std::string calofilename = "DST_CALOFITTING_run2pp_ana468_2024p012_v001-00053877-00000.root",
     const std::string calodir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana468_2024p012_v001/DST_CALOFITTING/run_00053800_00053900/dst/",
     const std::string kfp_header = "outputKFParticle_",
     const std::string outdir = "./root",
