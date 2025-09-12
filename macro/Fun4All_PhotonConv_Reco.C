@@ -188,7 +188,7 @@ void Fun4All_PhotonConv_Reco(
 
     /////////////////////////////////////////////////////
     // Set status of CALO towers, Calibrate towers, Cluster
-    Process_Calo_Calib(); // ???
+    // Process_Calo_Calib(); // ???
 
     Global_Reco();
 
