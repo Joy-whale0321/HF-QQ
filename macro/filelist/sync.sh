@@ -12,8 +12,8 @@ do
     # input list file settings
     input_trkr_tracks_file="dst_trkr_tracks_run2pp-000${runs[$k]}.list"
     # input_trkr_cluster_file="dst_trkr_cluster_run2pp-000${runs[$k]}.list"
-    input_calo_file="dst_calo_run2pp-000${runs[$k]}.list"
-    #input_calo_file="dst_calo-000${runs[$k]}.list"
+    # input_calo_file="dst_calo_run2pp-000${runs[$k]}.list"
+    input_calo_file="dst_calo-000${runs[$k]}.list"
     # input_calo_file="dst_calofitting-000${runs[$k]}.list"
 
     # check if input files exist, skip missing runs and segments files
