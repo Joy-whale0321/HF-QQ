@@ -22,7 +22,7 @@ while read run; do
     # 查找匹配的所有文件
     for f in ${dir}/${tag}-${run}-*.root; do
         if [[ -f "$f" ]]; then
-            echo "$f" >> "$outfile"
+            echo "$(basename "$f")" >> "$outfile"
         fi
     done
 
