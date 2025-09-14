@@ -69,15 +69,13 @@ do
         calo_map["$calo_segment"]="$calo_line"
     done < "$input_calo_file"
 
-    # loop over all tracker segments, write out only when calo can also match
-    for trkr_segment in "${!trkr_tracks_map[@]}"; do
-        # calculate matched calo segment, each ratio_nCalo_over_nTrkr(10) tracker segments correspond to 1 calo segment, 10#$trkr_segment-using base 10 to interpret $trkr_segment
-        matched_calo_segment=$(printf "%05d" $((10#$trkr_segment / ratio_nCalo_over_nTrkr))) 
-
-        # If the calo side has this segment, write a pair (tracker_segment, calo_segment)
+    # loop over all tracker segments, write out only when calo can also match with increased order
+    for trkr_segment in $(printf "%s\n" "${!trkr_tracks_map[@]}" | sort -n); do
+        matched_calo_segment=$(printf "%05d" $((10#$trkr_segment / ratio_nCalo_over_nTrkr)))
+        # 调试输出可保留观察次序
+        echo "[DEBUG-ORDERED] trkr_segment=${trkr_segment} -> calo_segment=${matched_calo_segment}"
         if [[ -n "${calo_map[$matched_calo_segment]}" ]]; then
             echo "$trkr_segment" "$matched_calo_segment" >> "$output_trkr_tracks_cluster_calo_file"
-            echo "[DEBUG] Matching trkr_segment=$trkr_segment to calo_segment=$matched_calo_segment"
         fi
     done
 
