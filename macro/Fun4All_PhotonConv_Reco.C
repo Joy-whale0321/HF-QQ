@@ -80,6 +80,7 @@ R__LOAD_LIBRARY(libepd.so)
 R__LOAD_LIBRARY(libzdcinfo.so)
 
 // trkr506:calo468 - 5:1
+// trkr506:calo509 - 10:1
 
 void Fun4All_PhotonConv_Reco(
     const int nEvents = 10,
