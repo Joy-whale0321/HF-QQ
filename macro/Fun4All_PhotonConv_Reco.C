@@ -182,7 +182,7 @@ void Fun4All_PhotonConv_Reco(
     // Set status of CALO towers, Calibrate towers, Cluster
     // Process_Calo_Calib(); // ???
 
-    // Global_Reco();
+    Global_Reco();
 
     // project track to calorimeter radius
     bool doEMcalRadiusCorr = true;
