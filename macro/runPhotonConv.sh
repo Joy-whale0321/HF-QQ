@@ -27,6 +27,6 @@ OutPath=$7
 Index=${8}
 StepSize=${9}
 
-root.exe -q -l Fun4All_PhotonConv_Reco.C\($nEvents,\"${InTrackDst}\",\"${InTrackPath}\",\"${InCaloDst}\",\"${InCaloPath}\",\"${OutPrefix}\",\"${OutPath}\",$Index,$StepSize\)
+root.exe -b -q -l Fun4All_PhotonConv_Reco.C\($nEvents,\"${InTrackDst}\",\"${InTrackPath}\",\"${InCaloDst}\",\"${InCaloPath}\",\"${OutPrefix}\",\"${OutPath}\",$Index,$StepSize\)
 
 echo Script done
