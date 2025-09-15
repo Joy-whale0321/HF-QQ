@@ -17,7 +17,7 @@ do
 
     sed -i \
         -e "s/^RunNumber[[:space:]]*=[[:space:]]*[0-9]*/RunNumber      = $run/" \
-        -e "s/^RunRange[[:space:]]*=[[:space:]]*run_[0-9]*_[0-9]*/RunRange       = run_${formatted_lower}_$  {formatted_upper}/" ${submissionFile}
+        -e "s/^RunRange[[:space:]]*=[[:space:]]*run_[0-9]*_[0-9]*/RunRange       = run_${formatted_lower}_${formatted_upper}/" ${submissionFile}
 
     ListFile=filelist/dst_sync_trkr_calo_run2pp-$(printf "%08d" "$run").list
     if [ -f ${ListFile} ]; then
