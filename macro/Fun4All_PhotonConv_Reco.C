@@ -84,14 +84,10 @@ R__LOAD_LIBRARY(libzdcinfo.so)
 
 void Fun4All_PhotonConv_Reco(
     const int nEvents = 10,
-    const std::string trkr_clusterfilename = "DST_TRKR_CLUSTER_run2pp_ana494_2024p021_v001-00053877-00000.root",
-    const std::string trkr_clusterdir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana494_2024p021_v001/DST_TRKR_CLUSTER/run_00053800_00053900/dst/",
     const std::string trkr_trackfilename = "DST_TRKR_TRACKS_run2pp_ana506_2024p023_v001-00053877-00001.root",
     const std::string trkr_trackdir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana506_2024p023_v001/DST_TRKR_TRACKS/run_00053800_00053900/dst/",
     const std::string calofilename = "DST_CALO_run2pp_ana509_2024p022_v001-00053877-00000.root",
     const std::string calodir = "/sphenix/lustre01/sphnxpro/production2/run2pp/physics/calocalib/ana509_2024p022_v001/run_00053800_00053900/",
-    // const std::string calofilename = "DST_CALOFITTING_run2pp_ana468_2024p012_v001-00053877-00000.root",
-    // const std::string calodir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana468_2024p012_v001/DST_CALOFITTING/run_00053800_00053900/dst/",
     const std::string kfp_header = "outputKFParticle_",
     const std::string outdir = "./root",
     const int index = 0,
@@ -99,7 +95,6 @@ void Fun4All_PhotonConv_Reco(
 {
     // Input files names
     std::string inputTrkrTrackFile = trkr_trackdir + trkr_trackfilename;
-    std::string inputTrkrClusterFile = trkr_clusterdir + trkr_clusterfilename;
     std::string inputCaloFile = calodir + calofilename;
 
     // get and set run number and segment from input file name
@@ -179,10 +174,6 @@ void Fun4All_PhotonConv_Reco(
     hitsin_track->fileopen(inputTrkrTrackFile);
     se->registerInputManager(hitsin_track);
 
-    // auto hitsin_cluster = new Fun4AllDstInputManager("DSTin_cluster");
-    // hitsin_cluster->fileopen(inputTrkrClusterFile);
-    // se->registerInputManager(hitsin_cluster);
-
     auto hitsin_calo = new Fun4AllDstInputManager("DSTin_calo");
     hitsin_calo->fileopen(inputCaloFile);
     se->registerInputManager(hitsin_calo);
@@ -245,7 +236,7 @@ void Fun4All_PhotonConv_Reco(
     TriggerRunInfoReco *triggerruninforeco = new TriggerRunInfoReco();
     se->registerSubsystem(triggerruninforeco);
 
-    //std::string outDir = outdir + "/inReconstruction/" + to_string(runnumber) + "/";
+    // output directory and file name setting
     string trailer = "_" + nice_runnumber.str() + "_" + nice_segment.str() + "_" + nice_index.str() + ".root";
 
     std::string PhotonConv_reco_dir = outdir + "/PhotonConv_reco/inReconstruction/" + to_string(runnumber) + "/";
