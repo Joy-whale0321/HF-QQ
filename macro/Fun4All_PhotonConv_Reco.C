@@ -168,7 +168,7 @@ void Fun4All_PhotonConv_Reco(
     // G4TPC::average_correction_filename = CDBInterface::instance()->getUrl("TPC_LAMINATION_FIT_CORRECTION");
     
     // G4MAGNET::magfield_rescale = 1;
-    // TrackingInit();
+    TrackingInit();
 
     auto hitsin_track = new Fun4AllDstInputManager("DSTin_track");
     hitsin_track->fileopen(inputTrkrTrackFile);
@@ -182,7 +182,7 @@ void Fun4All_PhotonConv_Reco(
     // Set status of CALO towers, Calibrate towers, Cluster
     // Process_Calo_Calib(); // ???
 
-    Global_Reco();
+    // Global_Reco();
 
     // project track to calorimeter radius
     bool doEMcalRadiusCorr = true;
