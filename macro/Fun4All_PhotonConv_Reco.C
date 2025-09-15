@@ -296,6 +296,8 @@ void Fun4All_PhotonConv_Reco(
 
 void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = "K_S0 -> pi^+ pi^-", std::string outfile = "KFP.root", std::string trackmapName = "SvtxTrackMap", std::string containerName = "KFParticle")
 {
+    auto se = Fun4AllServer::instance();
+    //KFParticle setup
     KFParticle_sPHENIX *kfparticle = new KFParticle_sPHENIX(module_name);
     kfparticle->Verbosity(0);
     kfparticle->setDecayDescriptor(decaydescriptor);
