@@ -20,6 +20,8 @@ while read run || [[ -n "$run" ]]; do
     outfile=${localpath}/dst_trkr_cluster_run2pp-${run}.list
     > "$outfile"
 
+    echo "run ended ${run}"
+
     tagversion=ana505_2024p023_v001
     dsttype=DST_TRKR_CLUSTER
     runspecies=run2pp
@@ -30,7 +32,6 @@ while read run || [[ -n "$run" ]]; do
     # echo "printing ${directory}/${fileHeader}*.root -> ${outfile}"
     cd ${directory}
     ls ${fileHeader}*.root > ${outfile}
-    echo "run ended ${run}"
 done < run.list
 
 # 逐行读取 run.list
