@@ -3,7 +3,10 @@
 localpath=$PWD
 
 # 逐行读取 run.list
-while read run; do
+while read run || [[ -n "$run" ]]; do
+    # 如果是空行就跳过
+    [[ -z "$run" ]] && continue
+
     # 补齐 8 位
     run=$(printf "%08d" "$run")
 
@@ -30,7 +33,9 @@ while read run; do
 done < run.list
 
 # 逐行读取 run.list
-while read run; do
+while read run || [[ -n "$run" ]]; do
+    # 如果是空行就跳过
+    [[ -z "$run" ]] && continue
     # 补齐 8 位
     run=$(printf "%08d" "$run")
 
