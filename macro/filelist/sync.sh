@@ -12,13 +12,13 @@ for ((k=0; k<${#runs[@]}; k++))
 do
     # input list file settings
     input_trkr_tracks_file="dst_trkr_tracks_run2pp-000${runs[$k]}.list"
-    # input_trkr_cluster_file="dst_trkr_cluster_run2pp-000${runs[$k]}.list"
+    input_trkr_cluster_file="dst_trkr_cluster_run2pp-000${runs[$k]}.list"
     # input_calo_file="dst_calo_run2pp-000${runs[$k]}.list"
     input_calo_file="dst_calo-000${runs[$k]}.list"
     # input_calo_file="dst_calofitting-000${runs[$k]}.list"
 
     # check if input files exist, skip missing runs and segments files
-    if [ ! -f "$input_trkr_tracks_file" ] || [ ! -f "$input_calo_file" ];  then
+    if [ ! -f "$input_trkr_tracks_file" ] || [ ! -f "$input_trkr_cluster_file" ] || [ ! -f "$input_calo_file" ]; then
         continue
     fi
 
@@ -65,15 +65,32 @@ do
         calo_map["$calo_segment"]="$calo_line"
     done < "$input_calo_file"
 
-    # loop over all tracker segments, write out only when calo can also match with increased order
-    for trkr_segment in $(printf "%s\n" "${!trkr_tracks_map[@]}" | sort -n); do
-        matched_calo_segment=$(printf "%05d" $((10#$trkr_segment / ratio_nCalo_over_nTrkr)))
-        # # check output the matching results
-        # echo "[DEBUG-ORDERED] trkr_segment=${trkr_segment} -> calo_segment=${matched_calo_segment}"
-        if [[ -n "${calo_map[$matched_calo_segment]}" ]]; then
-            echo "$trkr_segment" "$matched_calo_segment" >> "$output_trkr_tracks_cluster_calo_file"
+    # # loop over all tracker segments, write out only when calo can also match with increased order
+    # for trkr_segment in $(printf "%s\n" "${!trkr_tracks_map[@]}" | sort -n); do
+    #     matched_calo_segment=$(printf "%05d" $((10#$trkr_segment / ratio_nCalo_over_nTrkr)))
+    #     # # check output the matching results
+    #     # echo "[DEBUG-ORDERED] trkr_segment=${trkr_segment} -> calo_segment=${matched_calo_segment}"
+    #     if [[ -n "${calo_map[$matched_calo_segment]}" ]]; then
+    #         echo "$trkr_segment" "$matched_calo_segment" >> "$output_trkr_tracks_cluster_calo_file"
+    #     fi
+    # done
+
+    # read trkr cluster file and match with trkr tracks file
+    while IFS= read -r trkr_cluster_line; do
+        trkr_cluster_prefix=$(echo "$trkr_cluster_line" | cut -d'-' -f1)
+        trkr_cluster_run=$(echo "$trkr_cluster_line" | cut -d'-' -f2)
+        trkr_cluster_segment=$(echo "$trkr_cluster_line" | cut -d'-' -f3 | cut -d'.' -f1)
+        #echo trkr_cluster $trkr_cluster_segment
+
+        # check if match with trkr tracks file
+        if [[ -n "${trkr_tracks_map[$trkr_cluster_segment]}" ]]; then
+            # if matched, then check calo file
+            matched_calo_segment=$(printf "%05d" $((10#$trkr_cluster_segment / $ratio_nCalo_over_nTrkr)))
+            if [[ -n "${calo_map[$matched_calo_segment]}" ]]; then
+                echo "$trkr_cluster_segment" "$matched_calo_segment" >> "$output_trkr_tracks_cluster_calo_file"
+            fi
         fi
-    done
+    done < "$input_trkr_cluster_file"
 
     njobs=`cat $output_trkr_tracks_cluster_calo_file | wc -l`
     echo "Run ${runs[$k]} match done! Writing to $output_trkr_tracks_cluster_calo_file. ${njobs} Jobs in total"
