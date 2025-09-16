@@ -60,6 +60,4 @@ while read run || [[ -n "$run" ]]; do
     echo "printing ${directory}/${fileHeader}*.root -> ${outfile}" 
     cd ${directory}
     ls ${fileHeader}*.root > ${outfile}
-
-    echo "生成 $outfile, 包含 $(wc -l < "$outfile") 个文件"
 done < run.list
