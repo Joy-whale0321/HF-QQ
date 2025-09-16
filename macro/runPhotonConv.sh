@@ -30,6 +30,9 @@ StepSize=${9}
 InClusterDst=$10
 InClusterPath=$11
 
+echo "InClusterDst is: ${InClusterDst}"
+echo "InClusterPath is: ${InClusterPath}"
+
 root.exe -q -l Fun4All_PhotonConv_Reco.C\($nEvents,\"${InClusterDst}\",\"${InClusterPath}\",\"${InTrackDst}\",\"${InTrackPath}\",\"${InCaloDst}\",\"${InCaloPath}\",\"${OutPrefix}\",\"${OutPath}\",$Index,$StepSize\)
 
 echo Script done
