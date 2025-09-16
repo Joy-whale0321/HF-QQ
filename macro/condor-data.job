@@ -43,7 +43,7 @@ Initialdir     = /sphenix/user/jzhang1/PhysicsAna/HF-QQ/macro
 # The executable we want to run.
 Executable     = $(Initialdir)/runPhotonConv.sh
 
-Nevent         = 10000
+Nevent         = 200
 RunNumber      = 53877
 RunRange       = run_00053800_00053900
 TrackFolder    = ana506_2024p023_v001
