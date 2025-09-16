@@ -103,6 +103,8 @@ R__LOAD_LIBRARY(libzdcinfo.so)
 
 void Fun4All_PhotonConv_Reco(
     const int nEvents = 10,
+    const std::string trkr_clusterfilename = "DST_TRKR_CLUSTER_run2pp_ana494_2024p021_v001-00053877-00000.root",
+    const std::string trkr_clusterdir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana494_2024p021_v001/DST_TRKR_CLUSTER/run_00053800_00053900/dst/",
     const std::string trkr_trackfilename = "DST_TRKR_TRACKS_run2pp_ana506_2024p023_v001-00053877-00001.root",
     const std::string trkr_trackdir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana506_2024p023_v001/DST_TRKR_TRACKS/run_00053800_00053900/dst/",
     const std::string calofilename = "DST_CALO_run2pp_ana509_2024p022_v001-00053877-00000.root",
@@ -115,6 +117,7 @@ void Fun4All_PhotonConv_Reco(
     // Input files names
     std::string inputTrkrTrackFile = trkr_trackdir + trkr_trackfilename;
     std::string inputCaloFile = calodir + calofilename;
+    std::string inputTrkrClusterFile = trkr_clusterdir + trkr_clusterfilename;
 
     // get and set run number and segment from input file name
     std::pair<int, int>
@@ -196,6 +199,10 @@ void Fun4All_PhotonConv_Reco(
     auto hitsin_calo = new Fun4AllDstInputManager("DSTin_calo");
     hitsin_calo->fileopen(inputCaloFile);
     se->registerInputManager(hitsin_calo);
+
+    auto hitsin_cluster = new Fun4AllDstInputManager("DSTin_cluster");
+    hitsin_cluster->fileopen(inputTrkrClusterFile);
+    se->registerInputManager(hitsin_cluster);
 
     /////////////////////////////////////////////////////
     // Set status of CALO towers, Calibrate towers, Cluster

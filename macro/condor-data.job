@@ -57,9 +57,13 @@ OutPath        = /sphenix/user/jzhang1/PhysicsAna/HF-QQ/output/PhotonConv/
 Index          = 0
 StepSize       = 0
 
+ClusterFolder  = ana505_2024p023_v001
+ClusterFileName= DST_TRKR_CLUSTER_run2pp_$(ClusterFolder)-$INT(RunNumber,%08d)-$INT(TrkrSegment,%05d).root
+ClusterFilePath= /sphenix/lustre01/sphnxpro/production/run2pp/physics/$(ClusterFolder)/DST_TRKR_CLUSTER/$(RunRange)/dst/
+
 # The argument to pass to the executable.
 #tracking firt then calo, only one tracking file
-Arguments      = "$(Nevent) $(TrackFileName) $(TrackFilePath) $(CaloFileName) $(CaloFilePath) $(OutPrefix) $(OutPath) $(Index) $(StepSize)"
+Arguments      = "$(Nevent) $(TrackFileName) $(TrackFilePath) $(CaloFileName) $(CaloFilePath) $(OutPrefix) $(OutPath) $(Index) $(StepSize) $(ClusterFileName) $(ClusterFilePath)"
 
 # The job's stdout is sent to this file.
 Output         = $(Initialdir)/log/job-Data-$(RunNumber).$(TrkrSegment).$(Cluster).$(Process).out

@@ -27,6 +27,9 @@ OutPath=$7
 Index=${8}
 StepSize=${9}
 
-root.exe -q -l Fun4All_PhotonConv_Reco.C\($nEvents,\"${InTrackDst}\",\"${InTrackPath}\",\"${InCaloDst}\",\"${InCaloPath}\",\"${OutPrefix}\",\"${OutPath}\",$Index,$StepSize\)
+InClusterDst=$10
+InClusterPath=$11
+
+root.exe -q -l Fun4All_PhotonConv_Reco.C\($nEvents,\"${InClusterDst}\",\"${InClusterPath}\",\"${InTrackDst}\",\"${InTrackPath}\",\"${InCaloDst}\",\"${InCaloPath}\",\"${OutPrefix}\",\"${OutPath}\",$Index,$StepSize\)
 
 echo Script done
