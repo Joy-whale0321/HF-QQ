@@ -311,8 +311,8 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->getAllPVInfo(false);
     kfparticle->getTriggerInfo(false);
     kfparticle->getDetectorInfo(false);
-    kfparticle->getCaloInfo(false);              // 先不取 calo 信息
-    kfparticle->requireTrackEMCalMatch(false);   // **先关掉 EMCal 匹配**
+    kfparticle->getCaloInfo(true);              // 先不取 calo 信息
+    kfparticle->requireTrackEMCalMatch(true);   // **先关掉 EMCal 匹配**
     kfparticle->useFakePrimaryVertex(false);
     kfparticle->saveDST(false);
     kfparticle->saveParticleContainer(false);
@@ -320,17 +320,17 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     // kfparticle->magFieldFile("FIELDMAP_TRACKING"); // 一般走 CDB，先别改文件
 
     // —— 轨迹质量（放宽一点） —— //
-    kfparticle->bunchCrossingZeroOnly(false);
-    kfparticle->setMinMVTXhits(1);
-    kfparticle->setMinINTThits(1);
+    kfparticle->bunchCrossingZeroOnly(true);
+    kfparticle->setMinMVTXhits(0);
+    kfparticle->setMinINTThits(0);
     kfparticle->setMinTPChits(20);
     kfparticle->setMinimumTrackPT(0.2);
-    kfparticle->setMaximumTrackchi2nDOF(50.);
+    kfparticle->setMaximumTrackchi2nDOF(300.);
 
     // —— 顶点/几何选择（宽松） —— //
     kfparticle->setMaximumDaughterDCA(2.0);      // 3D，先给 2 cm
     kfparticle->setMaximumDaughterDCA_XY(2.0);
-    kfparticle->setMinDIRA(0.90);
+    kfparticle->setMinDIRA(-1,10);
     kfparticle->setDecayLengthRange(0., 100.);   // cm
     kfparticle->setDecayLengthRange_XY(0., 100.);
     kfparticle->setMinDecayLengthSignificance(-1e5);
