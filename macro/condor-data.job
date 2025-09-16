@@ -44,7 +44,7 @@ Initialdir     = /sphenix/user/jzhang1/PhysicsAna/HF-QQ/macro
 Executable     = $(Initialdir)/runPhotonConv.sh
 
 Nevent         = 200
-RunNumber      = 53877
+RunNumber      = 53046
 RunRange       = run_00053800_00053900
 TrackFolder    = ana506_2024p023_v001
 CaloFolder     = ana509_2024p022_v001
