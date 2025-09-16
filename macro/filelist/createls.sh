@@ -27,11 +27,10 @@ while read run || [[ -n "$run" ]]; do
     directory="/sphenix/lustre01/sphnxpro/production/${runspecies}/${runtype}/${tagversion}/${dsttype}/run_${formatted_lower}_${formatted_upper}/dst/"
 
     fileHeader=${dsttype}_${runspecies}_${tagversion}-${run}-
-    # echo "printing ${directory}/${fileHeader}*.root -> ${outfile}"
+    echo "printing ${directory}/${fileHeader}*.root -> ${outfile}"
     cd ${directory}
     ls ${fileHeader}*.root > ${outfile}
 done < run.list
-
 
 cd ${localpath}
 # 逐行读取 run.list
