@@ -105,7 +105,7 @@ void Fun4All_PhotonConv_Reco(
     const int nEvents = 10,
     const std::string trkr_clusterfilename = "DST_TRKR_CLUSTER_run2pp_ana505_2024p023_v001-00053877-00000.root",
     const std::string trkr_clusterdir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana505_2024p023_v001/DST_TRKR_CLUSTER/run_00053800_00053900/dst/",
-    const std::string trkr_trackfilename = "DST_TRKR_TRACKS_run2pp_ana506_2024p023_v001-00053877-00001.root",
+    const std::string trkr_trackfilename = "DST_TRKR_TRACKS_run2pp_ana506_2024p023_v001-00053877-00000.root",
     const std::string trkr_trackdir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana506_2024p023_v001/DST_TRKR_TRACKS/run_00053800_00053900/dst/",
     const std::string calofilename = "DST_CALO_run2pp_ana509_2024p022_v001-00053877-00000.root",
     const std::string calodir = "/sphenix/lustre01/sphnxpro/production2/run2pp/physics/calocalib/ana509_2024p022_v001/run_00053800_00053900/",
