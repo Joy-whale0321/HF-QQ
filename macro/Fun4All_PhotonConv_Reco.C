@@ -330,7 +330,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     // —— 顶点/几何选择（宽松） —— //
     kfparticle->setMaximumDaughterDCA(2.0);      // 3D，先给 2 cm
     kfparticle->setMaximumDaughterDCA_XY(2.0);
-    kfparticle->setMinDIRA(-1,10);
+    kfparticle->setMinDIRA(-1.10);
     kfparticle->setDecayLengthRange(0., 100.);   // cm
     kfparticle->setDecayLengthRange_XY(0., 100.);
     kfparticle->setMinDecayLengthSignificance(-1e5);
