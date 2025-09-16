@@ -521,7 +521,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->setMaximumMass(0.60);
     kfparticle->setMaximumMotherVertexVolume(0.1);
 
-    kfparticle->setOutputName(pipi_output_reco_file);
+    kfparticle->setOutputName(outfile);
 
     se->registerSubsystem(kfparticle);
 }
