@@ -57,6 +57,25 @@
 #pragma GCC diagnostic pop
 
 void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = "K_S0 -> pi^+ pi^-", std::string outfile = "KFP.root", std::string trackmapName = "SvtxTrackMap", std::string containerName = "KFParticle");
+
+bool save_tracks_to_DST = false;
+bool dont_use_global_vertex = true;
+bool require_track_and_vertex_match = true;
+bool save_all_vtx_info = true;
+bool extrapolate_track_to_SV = false;
+bool constrain_phi_mass = false;
+bool constrain_lambda_mass = false;
+bool constrain_D_mass = false;
+bool use_2D_matching = false;
+bool get_trigger_info = true;
+bool get_detector_info = true;
+bool get_detailed_tracking = false;
+bool get_dEdx_info = true;
+bool constrain_to_primary_vertex = true;
+bool use_pid = true;
+bool use_calo = false;
+float pid_frac = 0.4;
+
 float new_cemc_rad = 93.5;
 
 R__LOAD_LIBRARY(libkfparticle_sphenix.so)
