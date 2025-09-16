@@ -26,9 +26,8 @@ OutPrefix=$6
 OutPath=$7
 Index=${8}
 StepSize=${9}
-
-InClusterDst=$10
-InClusterPath=$11
+InClusterDst=${10}
+InClusterPath=${11}
 
 echo "InClusterDst is: ${InClusterDst}"
 echo "InClusterPath is: ${InClusterPath}"
