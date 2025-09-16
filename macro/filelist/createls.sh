@@ -20,7 +20,10 @@ while read run || [[ -n "$run" ]]; do
     outfile=${localpath}/dst_trkr_cluster_run2pp-${run}.list
     > "$outfile"
 
+    workpath=$PWD
+
     echo "run ended ${run}"
+    echo "work path is: ${workpath}"
 
     tagversion=ana505_2024p023_v001
     dsttype=DST_TRKR_CLUSTER
