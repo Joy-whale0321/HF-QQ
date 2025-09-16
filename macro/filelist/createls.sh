@@ -20,11 +20,6 @@ while read run || [[ -n "$run" ]]; do
     outfile=${localpath}/dst_trkr_cluster_run2pp-${run}.list
     > "$outfile"
 
-    workpath=$PWD
-
-    echo "run ended ${run}"
-    echo "work path is: ${workpath}"
-
     tagversion=ana505_2024p023_v001
     dsttype=DST_TRKR_CLUSTER
     runspecies=run2pp
@@ -37,6 +32,8 @@ while read run || [[ -n "$run" ]]; do
     ls ${fileHeader}*.root > ${outfile}
 done < run.list
 
+
+cd ${localpath}
 # 逐行读取 run.list
 while read run || [[ -n "$run" ]]; do
     # 如果是空行就跳过
