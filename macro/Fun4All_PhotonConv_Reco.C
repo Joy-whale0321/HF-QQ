@@ -167,26 +167,26 @@ void Fun4All_PhotonConv_Reco(
     ingeo->AddFile(geofile);
     se->registerInputManager(ingeo);
 
-    // TpcReadoutInit( runnumber );
-    // // these lines show how to override the drift velocity and time offset values set in TpcReadoutInit
-    // // G4TPC::tpc_drift_velocity_reco = 0.0073844; // cm/ns
-    // // TpcClusterZCrossingCorrection::_vdrift = G4TPC::tpc_drift_velocity_reco;
-    // // G4TPC::tpc_tzero_reco = -5*50;  // ns
+    TpcReadoutInit( runnumber );
+    // these lines show how to override the drift velocity and time offset values set in TpcReadoutInit
+    // G4TPC::tpc_drift_velocity_reco = 0.0073844; // cm/ns
+    // TpcClusterZCrossingCorrection::_vdrift = G4TPC::tpc_drift_velocity_reco;
+    // G4TPC::tpc_tzero_reco = -5*50;  // ns
 
-    // G4TPC::ENABLE_MODULE_EDGE_CORRECTIONS = true;
+    G4TPC::ENABLE_MODULE_EDGE_CORRECTIONS = true;
 
-    // // to turn on the default static corrections, enable the two lines below
-    // G4TPC::ENABLE_STATIC_CORRECTIONS = true;
-    // G4TPC::USE_PHI_AS_RAD_STATIC_CORRECTIONS = false;
+    // to turn on the default static corrections, enable the two lines below
+    G4TPC::ENABLE_STATIC_CORRECTIONS = true;
+    G4TPC::USE_PHI_AS_RAD_STATIC_CORRECTIONS = false;
 
-    // //to turn on the average corrections, enable the three lines below
-    // //note: these are designed to be used only if static corrections are also applied
-    // G4TPC::ENABLE_AVERAGE_CORRECTIONS = true;
-    // G4TPC::USE_PHI_AS_RAD_AVERAGE_CORRECTIONS = false;
-    //  // to use a custom file instead of the database file:
-    // G4TPC::average_correction_filename = CDBInterface::instance()->getUrl("TPC_LAMINATION_FIT_CORRECTION");
+    //to turn on the average corrections, enable the three lines below
+    //note: these are designed to be used only if static corrections are also applied
+    G4TPC::ENABLE_AVERAGE_CORRECTIONS = true;
+    G4TPC::USE_PHI_AS_RAD_AVERAGE_CORRECTIONS = false;
+     // to use a custom file instead of the database file:
+    G4TPC::average_correction_filename = CDBInterface::instance()->getUrl("TPC_LAMINATION_FIT_CORRECTION");
     
-    // G4MAGNET::magfield_rescale = 1;
+    G4MAGNET::magfield_rescale = 1;
     TrackingInit();
 
     auto hitsin_track = new Fun4AllDstInputManager("DSTin_track");
@@ -201,7 +201,7 @@ void Fun4All_PhotonConv_Reco(
     // Set status of CALO towers, Calibrate towers, Cluster
     // Process_Calo_Calib(); // ???
 
-    // Global_Reco();
+    Global_Reco();
 
     // project track to calorimeter radius
     bool doEMcalRadiusCorr = true;
