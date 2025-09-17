@@ -100,6 +100,23 @@ R__LOAD_LIBRARY(libzdcinfo.so)
 
 // trkr506:calo468 - 5:1
 // trkr506:calo509 - 10:1
+class TrackCountSkipper : public SubsysReco 
+{
+    public:
+        explicit TrackCountSkipper(unsigned max_tracks=10000)
+        : SubsysReco("TrackCountSkipper"), m_max(max_tracks) {}
+        int process_event(PHCompositeNode* topNode) override 
+        {
+            auto trkmap = findNode::getClass<SvtxTrackMap>(topNode, "SvtxTrackMap");
+            const unsigned n = trkmap ? trkmap->size() : 0;
+            // 也可以用配对上界：1ULL*n*(n>0?(n-1):0)/2ULL > 阈值
+            std::cout<<"track number is: "<<n<<std::endl; 
+            if (n > m_max) return Fun4AllReturnCodes::DISCARDEVENT; // 丢弃本 event
+            return Fun4AllReturnCodes::EVENT_OK;
+        }
+    private:
+        unsigned m_max;
+};
 
 void Fun4All_PhotonConv_Reco(
     const int nEvents = 10,
@@ -261,6 +278,11 @@ void Fun4All_PhotonConv_Reco(
     // TriggerRunInfoReco ???
     TriggerRunInfoReco *triggerruninforeco = new TriggerRunInfoReco();
     se->registerSubsystem(triggerruninforeco);
+
+    // check track multiplicity, skip event if too large
+    auto skipper = new TrackCountSkipper(/*max_tracks=*/200);
+    skipper->Verbosity(0);
+    se->registerSubsystem(skipper);
 
     // output directory and file name setting
     string trailer = "_" + nice_runnumber.str() + "_" + nice_segment.str() + "_" + nice_index.str() + ".root";
@@ -532,4 +554,3 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
 
     se->registerSubsystem(kfparticle);
 }
-
