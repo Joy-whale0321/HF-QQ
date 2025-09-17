@@ -103,15 +103,14 @@ R__LOAD_LIBRARY(libzdcinfo.so)
 
 // trkr506:calo468 - 5:1
 // trkr506:calo509 - 10:1
+// 预筛 KFP：用 pt / chi2/ndf / ndf / crossing 控制规模（不依赖子探测器命中接口）
 class PreKFPFilter : public SubsysReco {
  public:
-  PreKFPFilter(size_t min_tpc_hits=30, size_t min_mvtx_hits=2, size_t min_intt_hits=2,
-               double min_pt=0.5, double max_chi2ndf=30.0,
-               bool bunch0_only=true,
-               unsigned long long max_pairs=200000ULL)
+  PreKFPFilter(double min_pt=0.5, double max_chi2ndf=30.0, unsigned min_ndf=30,
+               bool bunch0_only=true, unsigned long long max_pairs=200000ULL)
   : SubsysReco("PreKFPFilter"),
-    m_minTPC(min_tpc_hits), m_minMVTX(min_mvtx_hits), m_minINTT(min_intt_hits),
-    m_minPt(min_pt), m_maxChi2NDF(max_chi2ndf), m_bunch0(bunch0_only), m_maxPairs(max_pairs) {}
+    m_minPt(min_pt), m_maxChi2NDF(max_chi2ndf), m_minNDF(min_ndf),
+    m_bunch0(bunch0_only), m_maxPairs(max_pairs) {}
 
   int process_event(PHCompositeNode* topNode) override {
     auto trkmap = findNode::getClass<SvtxTrackMap>(topNode, "SvtxTrackMap");
@@ -122,23 +121,27 @@ class PreKFPFilter : public SubsysReco {
       const SvtxTrack* t = it->second;
       if (!t) continue;
 
-      // 质量预选（和你 KFP 配置风格保持一致）
+      // 1) 基本质量：pt / chi2/ndf / ndf(与命中数相关)
+      const unsigned ndf = std::max(1u, t->get_ndf());
+      const double chi2ndf = t->get_chisq() / ndf;
       if (t->get_pt() < m_minPt) continue;
-      if (t->get_chisq()/std::max(1u,t->get_ndf()) > m_maxChi2NDF) continue;
-      if (t->get_tpc_nhits()  < m_minTPC)  continue;
-      if (t->get_mvtx_nhits() < m_minMVTX) continue;
-      if (t->get_intt_nhits() < m_minINTT) continue;
+      if (chi2ndf > m_maxChi2NDF) continue;
+      if (ndf < m_minNDF) continue;
 
-      // 束团限制：bunchCrossingZeroOnly
-      if (m_bunch0 && t->get_bunch_crossing() != 0) continue;
+      // 2) 束团选择（如果 API 不支持 get_crossing，可把这几行注释掉）
+      if (m_bunch0) {
+        // 新接口通常叫 get_crossing()
+        if (t->get_crossing() != 0) continue;
+      }
 
       ++n_good;
-      (t->get_charge()>0 ? ++n_pos : ++n_neg);
+      (t->get_charge() > 0 ? ++n_pos : ++n_neg);
     }
 
-    // 估算 K_S^0 候选上界（只计异号对）；若要最保守就用 n_good*(n_good-1)/2
-    unsigned long long pairs = 1ULL * n_pos * n_neg;
-    if (Verbosity()>0) {
+    // K_S^0 异号对上界；保守一点可改用 n_good*(n_good-1)/2
+    const unsigned long long pairs = 1ULL * n_pos * n_neg;
+
+    if (Verbosity() > 0) {
       auto rc = recoConsts::instance();
       std::cout << "[PreKFPFilter] run=" << rc->get_IntFlag("RUNNUMBER")
                 << " nTracks=" << trkmap->size()
@@ -148,16 +151,17 @@ class PreKFPFilter : public SubsysReco {
     }
 
     if (pairs > m_maxPairs) {
-      if (Verbosity()>0) std::cout << "[PreKFPFilter] discard event: pairs " << pairs
-                                   << " > " << m_maxPairs << std::endl;
+      if (Verbosity() > 0)
+        std::cout << "[PreKFPFilter] discard: pairs " << pairs
+                  << " > " << m_maxPairs << std::endl;
       return Fun4AllReturnCodes::DISCARDEVENT;
     }
     return Fun4AllReturnCodes::EVENT_OK;
   }
 
  private:
-  size_t m_minTPC, m_minMVTX, m_minINTT;
   double m_minPt, m_maxChi2NDF;
+  unsigned m_minNDF;
   bool m_bunch0;
   unsigned long long m_maxPairs;
 };
@@ -324,10 +328,13 @@ void Fun4All_PhotonConv_Reco(
     se->registerSubsystem(triggerruninforeco);
 
     // check track multiplicity, skip event if too large
-    auto prekfp = new PreKFPFilter(/*min_tpc_hits=*/30, /*min_mvtx_hits=*/2, /*min_intt_hits=*/2,
-                               /*min_pt=*/0.5, /*max_chi2ndf=*/30.0,
-                               /*bunch0_only=*/true,
-                               /*max_pairs=*/200000ULL);
+    auto prekfp = new PreKFPFilter(
+      /*min_pt=*/0.0,          // ≤ KFP 的 0.0
+      /*max_chi2ndf=*/120.0,   // ≥ KFP 的 100
+      /*min_ndf=*/20,          // ~≈ TPC hits 20 的松 proxy，可设 15–20
+      /*bunch0_only=*/false,   // 与 requireTrackVertexBunchCrossingMatch 不等价；先关掉以免误杀
+      /*max_pairs=*/200000ULL  // 用这个硬阈值来跳大事件；按内存再调
+    );
     prekfp->Verbosity(1);
     se->registerSubsystem(prekfp);
 
