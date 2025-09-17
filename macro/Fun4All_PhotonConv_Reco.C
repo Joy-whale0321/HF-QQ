@@ -103,22 +103,63 @@ R__LOAD_LIBRARY(libzdcinfo.so)
 
 // trkr506:calo468 - 5:1
 // trkr506:calo509 - 10:1
-class TrackCountSkipper : public SubsysReco 
-{
-    public:
-        explicit TrackCountSkipper(unsigned max_tracks=10000)
-        : SubsysReco("TrackCountSkipper"), m_max(max_tracks) {}
-        int process_event(PHCompositeNode* topNode) override 
-        {
-            auto trkmap = findNode::getClass<SvtxTrackMap>(topNode, "SvtxTrackMap");
-            const unsigned n = trkmap ? trkmap->size() : 0;
-            // 也可以用配对上界：1ULL*n*(n>0?(n-1):0)/2ULL > 阈值
-            std::cout<<"track number is: "<<n<<std::endl; 
-            if (n > m_max) return Fun4AllReturnCodes::DISCARDEVENT; // 丢弃本 event
-            return Fun4AllReturnCodes::EVENT_OK;
-        }
-    private:
-        unsigned m_max;
+class PreKFPFilter : public SubsysReco {
+ public:
+  PreKFPFilter(size_t min_tpc_hits=30, size_t min_mvtx_hits=2, size_t min_intt_hits=2,
+               double min_pt=0.5, double max_chi2ndf=30.0,
+               bool bunch0_only=true,
+               unsigned long long max_pairs=200000ULL)
+  : SubsysReco("PreKFPFilter"),
+    m_minTPC(min_tpc_hits), m_minMVTX(min_mvtx_hits), m_minINTT(min_intt_hits),
+    m_minPt(min_pt), m_maxChi2NDF(max_chi2ndf), m_bunch0(bunch0_only), m_maxPairs(max_pairs) {}
+
+  int process_event(PHCompositeNode* topNode) override {
+    auto trkmap = findNode::getClass<SvtxTrackMap>(topNode, "SvtxTrackMap");
+    if (!trkmap) return Fun4AllReturnCodes::EVENT_OK;
+
+    size_t n_pos=0, n_neg=0, n_good=0;
+    for (auto it = trkmap->begin(); it != trkmap->end(); ++it) {
+      const SvtxTrack* t = it->second;
+      if (!t) continue;
+
+      // 质量预选（和你 KFP 配置风格保持一致）
+      if (t->get_pt() < m_minPt) continue;
+      if (t->get_chisq()/std::max(1u,t->get_ndf()) > m_maxChi2NDF) continue;
+      if (t->get_tpc_nhits()  < m_minTPC)  continue;
+      if (t->get_mvtx_nhits() < m_minMVTX) continue;
+      if (t->get_intt_nhits() < m_minINTT) continue;
+
+      // 束团限制：bunchCrossingZeroOnly
+      if (m_bunch0 && t->get_bunch_crossing() != 0) continue;
+
+      ++n_good;
+      (t->get_charge()>0 ? ++n_pos : ++n_neg);
+    }
+
+    // 估算 K_S^0 候选上界（只计异号对）；若要最保守就用 n_good*(n_good-1)/2
+    unsigned long long pairs = 1ULL * n_pos * n_neg;
+    if (Verbosity()>0) {
+      auto rc = recoConsts::instance();
+      std::cout << "[PreKFPFilter] run=" << rc->get_IntFlag("RUNNUMBER")
+                << " nTracks=" << trkmap->size()
+                << " n_good=" << n_good
+                << " (pos=" << n_pos << ", neg=" << n_neg << ")"
+                << " pairs_upper=" << pairs << std::endl;
+    }
+
+    if (pairs > m_maxPairs) {
+      if (Verbosity()>0) std::cout << "[PreKFPFilter] discard event: pairs " << pairs
+                                   << " > " << m_maxPairs << std::endl;
+      return Fun4AllReturnCodes::DISCARDEVENT;
+    }
+    return Fun4AllReturnCodes::EVENT_OK;
+  }
+
+ private:
+  size_t m_minTPC, m_minMVTX, m_minINTT;
+  double m_minPt, m_maxChi2NDF;
+  bool m_bunch0;
+  unsigned long long m_maxPairs;
 };
 
 void Fun4All_PhotonConv_Reco(
@@ -283,9 +324,12 @@ void Fun4All_PhotonConv_Reco(
     se->registerSubsystem(triggerruninforeco);
 
     // check track multiplicity, skip event if too large
-    auto skipper = new TrackCountSkipper(/*max_tracks=*/10000);
-    skipper->Verbosity(0);
-    se->registerSubsystem(skipper);
+    auto prekfp = new PreKFPFilter(/*min_tpc_hits=*/30, /*min_mvtx_hits=*/2, /*min_intt_hits=*/2,
+                               /*min_pt=*/0.5, /*max_chi2ndf=*/30.0,
+                               /*bunch0_only=*/true,
+                               /*max_pairs=*/200000ULL);
+    prekfp->Verbosity(1);
+    se->registerSubsystem(prekfp);
 
     // output directory and file name setting
     string trailer = "_" + nice_runnumber.str() + "_" + nice_segment.str() + "_" + nice_index.str() + ".root";
@@ -300,7 +344,7 @@ void Fun4All_PhotonConv_Reco(
     }
     std::string PhotonConv_outfile_string(PhotonConv_outfile.Data());
     // KFPReco("PhotonConvReco1", "[gamma -> e+ e-]cc", PhotonConv_outfile_string);
-    KFPReco("PhotonConvReco1", "[K_S0 -> pi^+ pi^-]cc", PhotonConv_outfile_string);
+    KFPReco("PhotonConvReco", "[K_S0 -> pi^+ pi^-]cc", PhotonConv_outfile_string);
 
     std::string PhotonConv_reco_likesign_dir = outdir + "/PhotonConv_reco_likesign/inReconstruction/" + to_string  (runnumber) + "/";
     std::string PhotonConv_reco_likesign_filename = kfp_header + "PhotonConv_reco_likesign" + trailer;
