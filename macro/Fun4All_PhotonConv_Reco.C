@@ -283,7 +283,7 @@ void Fun4All_PhotonConv_Reco(
     se->registerSubsystem(triggerruninforeco);
 
     // check track multiplicity, skip event if too large
-    auto skipper = new TrackCountSkipper(/*max_tracks=*/200);
+    auto skipper = new TrackCountSkipper(/*max_tracks=*/10000);
     skipper->Verbosity(0);
     se->registerSubsystem(skipper);
 
@@ -299,8 +299,8 @@ void Fun4All_PhotonConv_Reco(
         system(makeDirectory.c_str());
     }
     std::string PhotonConv_outfile_string(PhotonConv_outfile.Data());
-    // KFPReco("PhotonConvReco", "[gamma -> e+ e-]cc", PhotonConv_outfile_string);
-    KFPReco("PhotonConvReco", "[K_S0 -> pi^+ pi^-]cc", PhotonConv_outfile_string);
+    // KFPReco("PhotonConvReco1", "[gamma -> e+ e-]cc", PhotonConv_outfile_string);
+    KFPReco("PhotonConvReco1", "[K_S0 -> pi^+ pi^-]cc", PhotonConv_outfile_string);
 
     std::string PhotonConv_reco_likesign_dir = outdir + "/PhotonConv_reco_likesign/inReconstruction/" + to_string  (runnumber) + "/";
     std::string PhotonConv_reco_likesign_filename = kfp_header + "PhotonConv_reco_likesign" + trailer;
