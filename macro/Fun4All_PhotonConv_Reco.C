@@ -22,6 +22,7 @@
 #include <fun4all/Fun4AllServer.h>
 
 #include <phool/recoConsts.h>
+#include <phool/getClass.h>
 
 #include <cdbobjects/CDBTTree.h>
 
@@ -39,6 +40,8 @@
 #include <trackingdiagnostics/TrackResiduals.h>
 #include <trackingdiagnostics/TrkrNtuplizer.h>
 #include <trackingdiagnostics/KshortReconstruction.h>
+
+#include <trackbase_historic/SvtxTrackMap.h>
 
 #include <caloreco/CaloGeomMapping.h>
 #include <caloreco/RawClusterBuilderTemplate.h>
