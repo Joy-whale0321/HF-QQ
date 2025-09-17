@@ -61,24 +61,6 @@
 
 void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = "K_S0 -> pi^+ pi^-", std::string outfile = "KFP.root", std::string trackmapName = "SvtxTrackMap", std::string containerName = "KFParticle");
 
-bool save_tracks_to_DST = false;
-bool dont_use_global_vertex = true;
-bool require_track_and_vertex_match = true;
-bool save_all_vtx_info = true;
-bool extrapolate_track_to_SV = false;
-bool constrain_phi_mass = false;
-bool constrain_lambda_mass = false;
-bool constrain_D_mass = false;
-bool use_2D_matching = false;
-bool get_trigger_info = true;
-bool get_detector_info = true;
-bool get_detailed_tracking = false;
-bool get_dEdx_info = true;
-bool constrain_to_primary_vertex = false;
-bool use_pid = true;
-bool use_calo = false;
-float pid_frac = 0.4;
-
 float new_cemc_rad = 93.5;
 
 R__LOAD_LIBRARY(libkfparticle_sphenix.so)
@@ -350,8 +332,8 @@ void Fun4All_PhotonConv_Reco(
         system(makeDirectory.c_str());
     }
     std::string PhotonConv_outfile_string(PhotonConv_outfile.Data());
-    // KFPReco("PhotonConvReco1", "[gamma -> e+ e-]cc", PhotonConv_outfile_string);
-    KFPReco("PhotonConvReco", "[K_S0 -> pi^+ pi^-]cc", PhotonConv_outfile_string);
+    KFPReco("PhotonConvReco1", "[gamma -> e^+ e^-]cc", PhotonConv_outfile_string);
+    // KFPReco("PhotonConvReco", "[K_S0 -> pi^+ pi^-]cc", PhotonConv_outfile_string);
 
     std::string PhotonConv_reco_likesign_dir = outdir + "/PhotonConv_reco_likesign/inReconstruction/" + to_string  (runnumber) + "/";
     std::string PhotonConv_reco_likesign_filename = kfp_header + "PhotonConv_reco_likesign" + trailer;
@@ -362,8 +344,8 @@ void Fun4All_PhotonConv_Reco(
         system(makeDirectory.c_str());
     }
     std::string PhotonConv_outfile_likesign_string(PhotonConv_likesign_outfile.Data());
-    // KFPReco("PhotonConvReco_likesign", "[gamma -> e+ e+]cc", PhotonConv_outfile_likesign_string);
-    KFPReco("PhotonConvReco_likesign", "[K_S0 -> pi^+ pi^+]cc", PhotonConv_outfile_likesign_string);
+    KFPReco("PhotonConvReco_likesign", "[gamma -> e^+ e^+]cc", PhotonConv_outfile_likesign_string);
+    // KFPReco("PhotonConvReco_likesign", "[K_S0 -> pi^+ pi^+]cc", PhotonConv_outfile_likesign_string);
 
     se->skip(stepsize*index);
     se->run(nEvents);
@@ -398,100 +380,134 @@ void Fun4All_PhotonConv_Reco(
     gSystem->Exit(0);
 }
 
+// Photon conversion reconstruction with KFParticle
+void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = "K_S0 -> pi^+ pi^-", std::string outfile = "KFP.root", std::string trackmapName = "SvtxTrackMap", std::string containerName = "KFParticle")
+{
+    auto se = Fun4AllServer::instance();
+    //KFParticle setup
+    KFParticle_sPHENIX *kfparticle = new KFParticle_sPHENIX(module_name);
+    kfparticle->Verbosity(0);
+    kfparticle->setDecayDescriptor(decaydescriptor);
+    
+    // 基本节点与开关
+    kfparticle->setTrackMapNodeName(trackmapName);
+    kfparticle->setContainerName(containerName);
+    kfparticle->dontUseGlobalVertex(false);                 // 允许使用全局PV信息（不等于约束母粒子到PV）
+    kfparticle->requireTrackVertexBunchCrossingMatch(true); // 轨迹-顶点束团匹配
+    kfparticle->getAllPVInfo(true);
+    kfparticle->allowZeroMassTracks(true);
+    kfparticle->use2Dmatching(false);
+    kfparticle->getTriggerInfo(true);
+    kfparticle->getDetectorInfo(true);
+    kfparticle->getCaloInfo(true);
+    kfparticle->useFakePrimaryVertex(false);
+    kfparticle->saveDST(false);
+    kfparticle->saveParticleContainer(false);
+    kfparticle->saveTrackContainer(false);
+    kfparticle->magFieldFile("FIELDMAP_TRACKING");
+    
+    // ===== Conversion 专属关键：不要约束到PV，要求指向 =====
+    kfparticle->constrainToPrimaryVertex(false);
+    kfparticle->setMinDIRA(0.995);                 // 指向性（PV->SV 与母动量夹角小）
+    kfparticle->setMotherIPchi2(FLT_MAX);          // 不要求母粒子IP显著性
+    kfparticle->setFlightDistancechi2(-1.);        // 不用χ²式飞行距离要求
+    
+    // ===== 顶点/几何窗口（XY平面近似半径门控）=====
+    // 让XY投影“飞行长度/时间”在合理范围内，相当于粗选半径（单位按接口约定）
+    kfparticle->setDecayLengthRange_XY(1.5, 30.0);   // ~1.5–30 cm；束管外到CEMC内前的材料区间（可调）
+    kfparticle->setDecayTimeRange_XY(-10000, FLT_MAX);
+    
+    // ===== 母粒子质量窗口：接近0 =====
+    kfparticle->setMinimumMass(0.0);
+    kfparticle->setMaximumMass(0.1);               // 50 MeV；如想更松：0.08–0.10
+    
+    // ===== 电子轨迹质量 & 命中 =====
+    kfparticle->bunchCrossingZeroOnly(true);
+    kfparticle->setMinMVTXhits(1);
+    kfparticle->setMinINTThits(1);
+    kfparticle->setMinTPChits(25);
+    kfparticle->setMinimumTrackPT(0.2);             // 低pT允许；更低会急剧增大配对量
+    kfparticle->setMaximumTrackchi2nDOF(30.0);      // 比K0短稍紧，抑制假轨
+    kfparticle->setMinimumTrackIP(-1.);             // 不强切IP
+    kfparticle->setMinimumTrackIPchi2(-1.);
+    
+    // ===== 两子轨在SV的几何关系 =====
+    kfparticle->setMaximumDaughterDCA(0.05);        // 0.5 mm；转换顶点两子轨应非常贴合
+    kfparticle->setMaximumDaughterDCA_XY(0.1);      // 留一点余量
+    kfparticle->setMaximumVertexchi2nDOF(12.0);     // 顶点χ²/ndf
+    
+    // ===== EMCal 匹配 + 电子特征 =====
+    kfparticle->set_emcal_radius_user(new_cemc_rad);   // 你前面设置了 new_cemc_rad=102.9
+    kfparticle->set_dphi_cut_low(-0.05);
+    kfparticle->set_dphi_cut_high( 0.05);
+    kfparticle->set_dz_cut_low(-5.0);
+    kfparticle->set_dz_cut_high( 5.0);
+    kfparticle->set_emcal_e_low_cut(0.2);              // 每条track对应cluster能量下限
+    kfparticle->requireTrackEMCalMatch(true);
+    
+    // （可选）TPC dE/dx / PID 约束
+    kfparticle->usePID(true);
+    kfparticle->setPIDacceptFraction(0.5f);            // 接受“更像e±”的一半候选（接口定义为分位阈值）
+    
+    // 其他
+    kfparticle->setMotherPT(0.0);
+    kfparticle->setMaximumMotherVertexVolume(0.1);
+    
+    kfparticle->setOutputName(outfile);
+    kfparticle->registerSubsystem(kfparticle);
+}
+
+// // KFP K reco to ensure the code is working
 // void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = "K_S0 -> pi^+ pi^-", std::string outfile = "KFP.root", std::string trackmapName = "SvtxTrackMap", std::string containerName = "KFParticle")
-// {
-//     auto se = Fun4AllServer::instance();
-//     //KFParticle setup
+// {   
+//     bool save_tracks_to_DST = false;
+//     bool dont_use_global_vertex = true;
+//     bool require_track_and_vertex_match = true;
+//     bool save_all_vtx_info = true;
+//     bool extrapolate_track_to_SV = false;
+//     bool constrain_phi_mass = false;
+//     bool constrain_lambda_mass = false;
+//     bool constrain_D_mass = false;
+//     bool use_2D_matching = false;
+//     bool get_trigger_info = true;
+//     bool get_detector_info = true;
+//     bool get_detailed_tracking = false;
+//     bool get_dEdx_info = true;
+//     bool constrain_to_primary_vertex = false;
+//     bool use_pid = true;
+//     bool use_calo = false;
+//     float pid_frac = 0.4;
+
+//     Fun4AllServer *se = Fun4AllServer::instance();
+
 //     KFParticle_sPHENIX *kfparticle = new KFParticle_sPHENIX(module_name);
+//     //KFParticle setup
 //     kfparticle->Verbosity(0);
 //     kfparticle->setDecayDescriptor(decaydescriptor);
-//     kfparticle->setTrackMapNodeName(trackmapName);
-//     kfparticle->setContainerName(containerName);
 
-//     // —— 对 conversion 必须放开的点 —— //
-//     kfparticle->dontUseGlobalVertex(true);
-//     kfparticle->constrainToPrimaryVertex(false);
-
-//     kfparticle->getAllPVInfo(false);
-//     kfparticle->getTriggerInfo(false);
-//     kfparticle->getDetectorInfo(false);
-//     kfparticle->getCaloInfo(true);              // 先不取 calo 信息
-//     kfparticle->requireTrackEMCalMatch(true);   // **先关掉 EMCal 匹配**
-//     kfparticle->useFakePrimaryVertex(false);
-//     kfparticle->saveDST(false);
+//     kfparticle->usePID(use_pid);
+//     kfparticle->setPIDacceptFraction(pid_frac);
+//     kfparticle->dontUseGlobalVertex(dont_use_global_vertex);
+//     kfparticle->requireTrackVertexBunchCrossingMatch(require_track_and_vertex_match);
+//     kfparticle->extraolateTracksToSV(extrapolate_track_to_SV);
+//     kfparticle->getAllPVInfo(save_all_vtx_info);
+//     kfparticle->allowZeroMassTracks();
+//     kfparticle->use2Dmatching(use_2D_matching);
+//     kfparticle->getTriggerInfo(get_trigger_info);
+//     kfparticle->getDetectorInfo(get_detector_info);
+//     kfparticle->GetDetailedTracking(get_detailed_tracking);
+//     kfparticle->saveDST(save_tracks_to_DST);
 //     kfparticle->saveParticleContainer(false);
-//     kfparticle->saveTrackContainer(false);
-//     // kfparticle->magFieldFile("FIELDMAP_TRACKING"); // 一般走 CDB，先别改文件
-
-//     // —— 轨迹质量（放宽一点） —— //
-//     kfparticle->bunchCrossingZeroOnly(true);
-//     kfparticle->setMinMVTXhits(0);
-//     kfparticle->setMinINTThits(0);
-//     kfparticle->setMinTPChits(20);
-//     kfparticle->setMinimumTrackPT(0.2);
-//     kfparticle->setMaximumTrackchi2nDOF(300.);
-
-//     // —— 顶点/几何选择（宽松） —— //
-//     kfparticle->setMaximumDaughterDCA(2.0);      // 3D，先给 2 cm
-//     kfparticle->setMaximumDaughterDCA_XY(2.0);
-//     kfparticle->setMinDIRA(-1.10);
-//     kfparticle->setDecayLengthRange(0., 100.);   // cm
-//     kfparticle->setDecayLengthRange_XY(0., 100.);
-//     kfparticle->setMinDecayLengthSignificance(-1e5);
-
-//     // —— 母粒子质量窗口（γ→e+e-） —— //
-//     kfparticle->setMinimumMass(-1);
-//     kfparticle->setMaximumMass(0.2);             // 先 200 MeV
-
-//     // —— 先别做 Calo 窗口；若要做再打开 —— //
-//     // kfparticle->set_emcal_radius_user(new_cemc_rad);
-//     // kfparticle->set_dphi_cut_low(-0.2);
-//     // kfparticle->set_dphi_cut_high(0.2);
-//     // kfparticle->set_dz_cut_low(-10);
-//     // kfparticle->set_dz_cut_high(10);
-//     // kfparticle->set_emcal_e_low_cut(0.2);
-//     // kfparticle->requireTrackEMCalMatch(true);
-
-//     kfparticle->setMaximumVertexchi2nDOF(50.);
-//     kfparticle->setMotherPT(0.);                 // 不限
-//     kfparticle->setMaximumMotherVertexVolume(2.0);
-
-//     kfparticle->setOutputName(outfile);
-//     se->registerSubsystem(kfparticle);
-// }
-
-// void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = "K_S0 -> pi^+ pi^-", std::string outfile = "KFP.root", std::string trackmapName = "SvtxTrackMap", std::string containerName = "KFParticle")
-// {
-//     auto se = Fun4AllServer::instance();
-//     //KFParticle setup
-//     KFParticle_sPHENIX *kfparticle = new KFParticle_sPHENIX(module_name);
-//     kfparticle->Verbosity(0);
-//     kfparticle->setDecayDescriptor(decaydescriptor);
-    
-//     kfparticle->setTrackMapNodeName(trackmapName);
-//     kfparticle->setContainerName(containerName);
-    
-//     //Basic node selection and configuration
-//     kfparticle->dontUseGlobalVertex(false);
-//     kfparticle->requireTrackVertexBunchCrossingMatch(true);
-//     kfparticle->getAllPVInfo(true);
-//     kfparticle->allowZeroMassTracks(true);
-//     kfparticle->use2Dmatching(false);
-//     kfparticle->getTriggerInfo(true);
-//     kfparticle->getDetectorInfo(true);
-//     kfparticle->getCaloInfo(true);
-//     kfparticle->useFakePrimaryVertex(false);
-//     kfparticle->saveDST(false);
-//     kfparticle->saveParticleContainer(false);
-//     kfparticle->saveTrackContainer(false);
 //     kfparticle->magFieldFile("FIELDMAP_TRACKING");
-    
+
 //     //PV to SV cuts
-//     kfparticle->constrainToPrimaryVertex(true);
-//     kfparticle->setMotherIPchi2(FLT_MAX);
+//     kfparticle->constrainToPrimaryVertex(constrain_to_primary_vertex);
+//     //kfparticle->setMotherIPchi2(100);//for default navigator
+//     kfparticle->setMotherIPchi2(FLT_MAX);//for direct navigator
 //     kfparticle->setFlightDistancechi2(-1.);
-//     kfparticle->setMinDIRA(-1.1);
-//     kfparticle->setDecayLengthRange(0., FLT_MAX);
+//     kfparticle->setMinDIRA(0.88); //was .95
+//     kfparticle->setDecayLengthRange(.2, FLT_MAX); //was 0.1 min
+
 //     kfparticle->setDecayLengthRange_XY(-10000, FLT_MAX);
 //     kfparticle->setDecayTimeRange_XY(-10000, FLT_MAX);
 //     kfparticle->setDecayTimeRange(-10000, FLT_MAX);
@@ -499,112 +515,27 @@ void Fun4All_PhotonConv_Reco(
 //     kfparticle->setMinDecayLengthSignificance(-1e5);
 //     kfparticle->setMinDecayLengthSignificance_XY(-1e5);
 //     kfparticle->setMaximumDaughterDCA_XY(100);
-//     kfparticle->setMaximumDaughterDCA(0.1);
-    
+
 //     //Track parameters
-//     kfparticle->bunchCrossingZeroOnly(true);
-//     kfparticle->setMinMVTXhits(1);
-//     kfparticle->setMinINTThits(1);
-//     kfparticle->setMinTPChits(25);
-//     kfparticle->setMinimumTrackPT(0.5);
-//     kfparticle->setMaximumTrackPTchi2(FLT_MAX);
+//     kfparticle->setMinimumTrackPT(0.0);
 //     kfparticle->setMinimumTrackIPchi2(-1.);
 //     kfparticle->setMinimumTrackIP(-1.);
 //     kfparticle->setMaximumTrackchi2nDOF(100.);
+//     kfparticle->setMinINTThits(1); //was 0
+//     kfparticle->setMinMVTXhits(1); //was 0
+//     kfparticle->setMinTPChits(20); //was 20
 
-//     //Track-Calo matching
-//     kfparticle->set_emcal_radius_user(new_cemc_rad);
-//     //narrow window
-//     /*
-//     kfparticle->set_dphi_cut_low(-0.02); //rad
-//     kfparticle->set_dphi_cut_high(0.09); //rad
-//     kfparticle->set_dz_cut_low(-4); //cm
-//     kfparticle->set_dz_cut_high(4); //cm
-//     */
-//     //loose window
-//     kfparticle->set_dphi_cut_low(-0.2); //rad
-//     kfparticle->set_dphi_cut_high(0.2); //rad
-//     kfparticle->set_dz_cut_low(-10); //cm
-//     kfparticle->set_dz_cut_high(10); //cm
-//     kfparticle->set_emcal_e_low_cut(0.2); //GeV
-//     kfparticle->requireTrackEMCalMatch(true);
-    
 //     //Vertex parameters
 //     kfparticle->setMaximumVertexchi2nDOF(20);
-    
+//     kfparticle->setMaximumDaughterDCA(0.1); //5 mm //was 0.5
+
 //     //Parent parameters
 //     kfparticle->setMotherPT(0);
-//     kfparticle->setMinimumMass(-1);
-//     kfparticle->setMaximumMass(15);
+//     kfparticle->setMinimumMass(0.40); //Check mass ranges
+//     kfparticle->setMaximumMass(0.60);
 //     kfparticle->setMaximumMotherVertexVolume(0.1);
-    
+
 //     kfparticle->setOutputName(outfile);
-    
+
 //     se->registerSubsystem(kfparticle);
 // }
-
-
-// KFP K reco to ensure the code is working
-void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = "K_S0 -> pi^+ pi^-", std::string outfile = "KFP.root", std::string trackmapName = "SvtxTrackMap", std::string containerName = "KFParticle")
-{
-    Fun4AllServer *se = Fun4AllServer::instance();
-
-    KFParticle_sPHENIX *kfparticle = new KFParticle_sPHENIX(module_name);
-    //KFParticle setup
-    kfparticle->Verbosity(0);
-    kfparticle->setDecayDescriptor(decaydescriptor);
-
-    kfparticle->usePID(use_pid);
-    kfparticle->setPIDacceptFraction(pid_frac);
-    kfparticle->dontUseGlobalVertex(dont_use_global_vertex);
-    kfparticle->requireTrackVertexBunchCrossingMatch(require_track_and_vertex_match);
-    kfparticle->extraolateTracksToSV(extrapolate_track_to_SV);
-    kfparticle->getAllPVInfo(save_all_vtx_info);
-    kfparticle->allowZeroMassTracks();
-    kfparticle->use2Dmatching(use_2D_matching);
-    kfparticle->getTriggerInfo(get_trigger_info);
-    kfparticle->getDetectorInfo(get_detector_info);
-    kfparticle->GetDetailedTracking(get_detailed_tracking);
-    kfparticle->saveDST(save_tracks_to_DST);
-    kfparticle->saveParticleContainer(false);
-    kfparticle->magFieldFile("FIELDMAP_TRACKING");
-
-    //PV to SV cuts
-    kfparticle->constrainToPrimaryVertex(constrain_to_primary_vertex);
-    //kfparticle->setMotherIPchi2(100);//for default navigator
-    kfparticle->setMotherIPchi2(FLT_MAX);//for direct navigator
-    kfparticle->setFlightDistancechi2(-1.);
-    kfparticle->setMinDIRA(0.88); //was .95
-    kfparticle->setDecayLengthRange(.2, FLT_MAX); //was 0.1 min
-
-    kfparticle->setDecayLengthRange_XY(-10000, FLT_MAX);
-    kfparticle->setDecayTimeRange_XY(-10000, FLT_MAX);
-    kfparticle->setDecayTimeRange(-10000, FLT_MAX);
-    kfparticle->setMinDecayTimeSignificance(-1e5);
-    kfparticle->setMinDecayLengthSignificance(-1e5);
-    kfparticle->setMinDecayLengthSignificance_XY(-1e5);
-    kfparticle->setMaximumDaughterDCA_XY(100);
-
-    //Track parameters
-    kfparticle->setMinimumTrackPT(0.0);
-    kfparticle->setMinimumTrackIPchi2(-1.);
-    kfparticle->setMinimumTrackIP(-1.);
-    kfparticle->setMaximumTrackchi2nDOF(100.);
-    kfparticle->setMinINTThits(1); //was 0
-    kfparticle->setMinMVTXhits(1); //was 0
-    kfparticle->setMinTPChits(20); //was 20
-
-    //Vertex parameters
-    kfparticle->setMaximumVertexchi2nDOF(20);
-    kfparticle->setMaximumDaughterDCA(0.1); //5 mm //was 0.5
-
-    //Parent parameters
-    kfparticle->setMotherPT(0);
-    kfparticle->setMinimumMass(0.40); //Check mass ranges
-    kfparticle->setMaximumMass(0.60);
-    kfparticle->setMaximumMotherVertexVolume(0.1);
-
-    kfparticle->setOutputName(outfile);
-
-    se->registerSubsystem(kfparticle);
-}
