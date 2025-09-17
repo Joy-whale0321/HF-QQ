@@ -473,7 +473,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     bool get_detector_info = true;
     bool get_detailed_tracking = false;
     bool get_dEdx_info = true;
-    bool constrain_to_primary_vertex = false;
+    bool constrain_to_primary_vertex = true;
     bool use_pid = true;
     bool use_calo = false;
     float pid_frac = 0.4;
