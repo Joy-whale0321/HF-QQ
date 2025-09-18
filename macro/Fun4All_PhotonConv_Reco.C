@@ -245,7 +245,7 @@ void Fun4All_PhotonConv_Reco(
 
     auto hitsin_calo = new Fun4AllDstInputManager("DSTin_calo");
     hitsin_calo->fileopen(inputCaloFile);
-    se->registerInputManager(hitsin_calo);
+    // se->registerInputManager(hitsin_calo);
 
     auto hitsin_cluster = new Fun4AllDstInputManager("DSTin_cluster");
     hitsin_cluster->fileopen(inputTrkrClusterFile);
