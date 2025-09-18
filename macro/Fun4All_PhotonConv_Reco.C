@@ -407,7 +407,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->magFieldFile("FIELDMAP_TRACKING");
 
     // ===== Conversion 专属关键：不要约束到PV，要求指向 =====
-    kfparticle->constrainToPrimaryVertex(true);
+    kfparticle->constrainToPrimaryVertex(false);
     kfparticle->setMinDIRA(0.995);                 // 指向性（PV->SV 与母动量夹角小）
     kfparticle->setMotherIPchi2(FLT_MAX);          // 不要求母粒子IP显著性
     kfparticle->setFlightDistancechi2(-1.);        // 不用χ²式飞行距离要求
