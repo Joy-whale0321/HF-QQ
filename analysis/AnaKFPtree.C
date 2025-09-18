@@ -7,11 +7,11 @@
 #include <cmath>
 
 void AnaKFPtree(
-    const char* filename="/mnt/e/sphenix/HF-QQ/output/K0s_reco_4M_0917.root",
-    // const char* filename="/mnt/e/sphenix/HF-QQ/output/K0s_bkgreco_4M_0917.root",
+    // const char* filename="/mnt/e/sphenix/HF-QQ/output/K0s_reco_4M_0918.root",
+    const char* filename="/mnt/e/sphenix/HF-QQ/output/K0s_bkgreco_4M_0918.root",
     const char* treename="DecayTree",
-    const char* outputname="/mnt/e/sphenix/HF-QQ/output/K0s_reco_4M_0917_ana.root"
-    // const char* outputname="/mnt/e/sphenix/HF-QQ/output/K0s_bkgreco_4M_0917_ana.root"
+    // const char* outputname="/mnt/e/sphenix/HF-QQ/output/K0s_reco_4M_0918_ana.root"
+    const char* outputname="/mnt/e/sphenix/HF-QQ/output/K0s_bkgreco_4M_0918_ana.root"
 ) 
 {
     TFile outfile(outputname, "RECREATE");
