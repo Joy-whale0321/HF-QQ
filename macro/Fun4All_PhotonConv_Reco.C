@@ -245,7 +245,7 @@ void Fun4All_PhotonConv_Reco(
 
     auto hitsin_calo = new Fun4AllDstInputManager("DSTin_calo");
     hitsin_calo->fileopen(inputCaloFile);
-    // se->registerInputManager(hitsin_calo);
+    se->registerInputManager(hitsin_calo);
 
     auto hitsin_cluster = new Fun4AllDstInputManager("DSTin_cluster");
     hitsin_cluster->fileopen(inputTrkrClusterFile);
@@ -407,7 +407,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->magFieldFile("FIELDMAP_TRACKING");
 
     // ===== Conversion 专属关键：不要约束到PV，要求指向 =====
-    kfparticle->constrainToPrimaryVertex(false);
+    kfparticle->constrainToPrimaryVertex(true);
     kfparticle->setMinDIRA(0.995);                 // 指向性（PV->SV 与母动量夹角小）
     kfparticle->setMotherIPchi2(FLT_MAX);          // 不要求母粒子IP显著性
     kfparticle->setFlightDistancechi2(-1.);        // 不用χ²式飞行距离要求
