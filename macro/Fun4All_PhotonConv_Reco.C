@@ -332,7 +332,7 @@ void Fun4All_PhotonConv_Reco(
         system(makeDirectory.c_str());
     }
     std::string PhotonConv_outfile_string(PhotonConv_outfile.Data());
-    KFPReco("PhotonConvReco1", "[gamma -> e^+ e^-]cc", PhotonConv_outfile_string);
+    KFPReco("PhotonConvReco", "[gamma -> e^+ e^-]cc", PhotonConv_outfile_string);
     // KFPReco("PhotonConvReco", "[K_S0 -> pi^+ pi^-]cc", PhotonConv_outfile_string);
 
     std::string PhotonConv_reco_likesign_dir = outdir + "/PhotonConv_reco_likesign/inReconstruction/" + to_string  (runnumber) + "/";
@@ -407,7 +407,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->saveParticleContainer(false);
     kfparticle->saveTrackContainer(false);
     kfparticle->magFieldFile("FIELDMAP_TRACKING");
-    
+
     //PV to SV cuts
     kfparticle->constrainToPrimaryVertex(true);
     kfparticle->setMotherIPchi2(FLT_MAX);
@@ -422,7 +422,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->setMinDecayLengthSignificance_XY(-1e5);
     kfparticle->setMaximumDaughterDCA_XY(FLT_MAX);
     kfparticle->setMaximumDaughterDCA(FLT_MAX);
-    
+
     //Track parameters
     kfparticle->bunchCrossingZeroOnly(true);
     kfparticle->setMinMVTXhits(0);
@@ -433,7 +433,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->setMinimumTrackIPchi2(-1.);
     kfparticle->setMinimumTrackIP(-1.);
     kfparticle->setMaximumTrackchi2nDOF(300.);
-    
+
     //Track-Calo matching
     kfparticle->set_emcal_radius_user(new_cemc_rad);
     //narrow window
@@ -450,18 +450,18 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     */
     kfparticle->set_emcal_e_low_cut(0.2); //GeV
     kfparticle->requireTrackEMCalMatch(true);
-    
+
     //Vertex parameters
     kfparticle->setMaximumVertexchi2nDOF(FLT_MAX);
-    
+
     //Parent parameters
     kfparticle->setMotherPT(0);
     kfparticle->setMinimumMass(-1);
     kfparticle->setMaximumMass(15);
     kfparticle->setMaximumMotherVertexVolume(FLT_MAX);
-    
+
     kfparticle->setOutputName(outfile);
-    
+
     se->registerSubsystem(kfparticle);
 }
 
