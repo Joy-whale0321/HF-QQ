@@ -392,66 +392,66 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     // 基本节点与开关
     kfparticle->setTrackMapNodeName(trackmapName);
     kfparticle->setContainerName(containerName);
-    kfparticle->dontUseGlobalVertex(false);                 // 允许使用全局PV信息（不等于约束母粒子到PV）
-    kfparticle->requireTrackVertexBunchCrossingMatch(true); // 轨迹-顶点束团匹配
-    kfparticle->getAllPVInfo(true);
-    kfparticle->allowZeroMassTracks(true);
-    kfparticle->use2Dmatching(false);
-    kfparticle->getTriggerInfo(true);
-    kfparticle->getDetectorInfo(true);
-    kfparticle->getCaloInfo(true);
-    kfparticle->useFakePrimaryVertex(false);
-    kfparticle->saveDST(false);
-    kfparticle->saveParticleContainer(false);
-    kfparticle->saveTrackContainer(false);
-    kfparticle->magFieldFile("FIELDMAP_TRACKING");
+    // kfparticle->dontUseGlobalVertex(false);                 // 允许使用全局PV信息
+    // kfparticle->requireTrackVertexBunchCrossingMatch(true); // 轨迹-顶点束团匹配
+    // kfparticle->getAllPVInfo(true);
+    // kfparticle->allowZeroMassTracks(true);
+    // kfparticle->use2Dmatching(false);
+    // kfparticle->getTriggerInfo(true);
+    // kfparticle->getDetectorInfo(true);
+    // kfparticle->getCaloInfo(true);
+    // kfparticle->useFakePrimaryVertex(false);
+    // kfparticle->saveDST(false);
+    // kfparticle->saveParticleContainer(false);
+    // kfparticle->saveTrackContainer(false);
+    // kfparticle->magFieldFile("FIELDMAP_TRACKING");
 
-    // ===== Conversion 专属关键：不要约束到PV，要求指向 =====
-    kfparticle->constrainToPrimaryVertex(false);
-    kfparticle->setMinDIRA(0.995);                 // 指向性（PV->SV 与母动量夹角小）
-    kfparticle->setMotherIPchi2(FLT_MAX);          // 不要求母粒子IP显著性
-    kfparticle->setFlightDistancechi2(-1.);        // 不用χ²式飞行距离要求
+    // // ===== Conversion 专属关键：不要约束到PV，要求指向 =====
+    // kfparticle->constrainToPrimaryVertex(false);
+    // kfparticle->setMinDIRA(0.995);                 // 指向性（PV->SV 与母动量夹角小）
+    // kfparticle->setMotherIPchi2(FLT_MAX);          // 不要求母粒子IP显著性
+    // kfparticle->setFlightDistancechi2(-1.);        // 不用χ²式飞行距离要求
 
-    // ===== 顶点/几何窗口（XY平面近似半径门控）=====
-    // 让XY投影“飞行长度/时间”在合理范围内，相当于粗选半径（单位按接口约定）
-    kfparticle->setDecayLengthRange_XY(1.5, 30.0);   // ~1.5–30 cm；束管外到CEMC内前的材料区间（可调）
-    kfparticle->setDecayTimeRange_XY(-10000, FLT_MAX);
+    // // ===== 顶点/几何窗口（XY平面近似半径门控）=====
+    // // 让XY投影“飞行长度/时间”在合理范围内，相当于粗选半径（单位按接口约定）
+    // kfparticle->setDecayLengthRange_XY(1.5, 30.0);   // ~1.5–30 cm；束管外到CEMC内前的材料区间（可调）
+    // kfparticle->setDecayTimeRange_XY(-10000, FLT_MAX);
 
-    // ===== 母粒子质量窗口：接近0 =====
-    kfparticle->setMinimumMass(0.0);
-    kfparticle->setMaximumMass(0.1);               // 50 MeV；如想更松：0.08–0.10
+    // // ===== 母粒子质量窗口：接近0 =====
+    // kfparticle->setMinimumMass(0.0);
+    // kfparticle->setMaximumMass(0.1);               // 50 MeV；如想更松：0.08–0.10
 
-    // ===== 电子轨迹质量 & 命中 =====
-    kfparticle->bunchCrossingZeroOnly(true);
-    kfparticle->setMinMVTXhits(1);
-    kfparticle->setMinINTThits(1);
-    kfparticle->setMinTPChits(25);
-    kfparticle->setMinimumTrackPT(0.2);             // 低pT允许；更低会急剧增大配对量
-    kfparticle->setMaximumTrackchi2nDOF(30.0);      // 比K0短稍紧，抑制假轨
-    kfparticle->setMinimumTrackIP(-1.);             // 不强切IP
-    kfparticle->setMinimumTrackIPchi2(-1.);
+    // // ===== 电子轨迹质量 & 命中 =====
+    // kfparticle->bunchCrossingZeroOnly(true);
+    // kfparticle->setMinMVTXhits(1);
+    // kfparticle->setMinINTThits(1);
+    // kfparticle->setMinTPChits(25);
+    // kfparticle->setMinimumTrackPT(0.2);             // 低pT允许；更低会急剧增大配对量
+    // kfparticle->setMaximumTrackchi2nDOF(30.0);      // 比K0短稍紧，抑制假轨
+    // kfparticle->setMinimumTrackIP(-1.);             // 不强切IP
+    // kfparticle->setMinimumTrackIPchi2(-1.);
 
-    // ===== 两子轨在SV的几何关系 =====
-    kfparticle->setMaximumDaughterDCA(0.05);        // 0.5 mm；转换顶点两子轨应非常贴合
-    kfparticle->setMaximumDaughterDCA_XY(0.1);      // 留一点余量
-    kfparticle->setMaximumVertexchi2nDOF(12.0);     // 顶点χ²/ndf
+    // // ===== 两子轨在SV的几何关系 =====
+    // kfparticle->setMaximumDaughterDCA(0.05);        // 0.5 mm；转换顶点两子轨应非常贴合
+    // kfparticle->setMaximumDaughterDCA_XY(0.1);      // 留一点余量
+    // kfparticle->setMaximumVertexchi2nDOF(12.0);     // 顶点χ²/ndf
 
-    // ===== EMCal 匹配 + 电子特征 =====
-    kfparticle->set_emcal_radius_user(new_cemc_rad);   // 你前面设置了 new_cemc_rad=102.9
-    kfparticle->set_dphi_cut_low(-0.05);
-    kfparticle->set_dphi_cut_high( 0.05);
-    kfparticle->set_dz_cut_low(-5.0);
-    kfparticle->set_dz_cut_high( 5.0);
-    kfparticle->set_emcal_e_low_cut(0.2);              // 每条track对应cluster能量下限
-    kfparticle->requireTrackEMCalMatch(true);
+    // // ===== EMCal 匹配 + 电子特征 =====
+    // kfparticle->set_emcal_radius_user(new_cemc_rad);   // 你前面设置了 new_cemc_rad=102.9
+    // kfparticle->set_dphi_cut_low(-0.05);
+    // kfparticle->set_dphi_cut_high( 0.05);
+    // kfparticle->set_dz_cut_low(-5.0);
+    // kfparticle->set_dz_cut_high( 5.0);
+    // kfparticle->set_emcal_e_low_cut(0.2);              // 每条track对应cluster能量下限
+    // kfparticle->requireTrackEMCalMatch(true);
 
-    // （可选）TPC dE/dx / PID 约束
-    kfparticle->usePID(true);
-    kfparticle->setPIDacceptFraction(0.5f);            // 接受“更像e±”的一半候选（接口定义为分位阈值）
+    // // （可选）TPC dE/dx / PID 约束
+    // kfparticle->usePID(true);
+    // kfparticle->setPIDacceptFraction(0.5f);            // 接受“更像e±”的一半候选（接口定义为分位阈值）
 
-    // 其他
-    kfparticle->setMotherPT(0.0);
-    kfparticle->setMaximumMotherVertexVolume(0.1);
+    // // 其他
+    // kfparticle->setMotherPT(0.0);
+    // kfparticle->setMaximumMotherVertexVolume(0.1);
 
     kfparticle->setOutputName(outfile);
     se->registerSubsystem(kfparticle);
