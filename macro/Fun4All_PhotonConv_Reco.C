@@ -384,83 +384,81 @@ void Fun4All_PhotonConv_Reco(
 void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = "K_S0 -> pi^+ pi^-", std::string outfile = "KFP.root", std::string trackmapName = "SvtxTrackMap", std::string containerName = "KFParticle")
 {
     auto se = Fun4AllServer::instance();
+    auto kf = new KFParticle_sPHENIX(module_name);
+    kf->Verbosity(0);
+    kf->setDecayDescriptor(decaydescriptor);
 
-    KFParticle_sPHENIX* kfparticle = new KFParticle_sPHENIX(module_name);
-    kfparticle->Verbosity(0);                               // 调试可设 1
-    kfparticle->setDecayDescriptor(decaydescriptor);
+    // 基础
+    kf->setTrackMapNodeName(trackmapName);
+    kf->setContainerName(containerName);
+    kf->setOutputName(outfile);
+    kf->magFieldFile("FIELDMAP_TRACKING");
+    kf->dontUseGlobalVertex(false);
+    kf->requireTrackVertexBunchCrossingMatch(false);
+    kf->getAllPVInfo(false);
+    kf->use2Dmatching(false);
+    kf->getTriggerInfo(true);
+    kf->getDetectorInfo(true);
+    kf->GetDetailedTracking(false);
+    kf->getCaloInfo(true);
+    kf->useFakePrimaryVertex(false);
+    kf->saveDST(false);
+    kf->saveParticleContainer(false);
+    kf->saveTrackContainer(false);
 
-    // 基础/节点
-    kfparticle->setTrackMapNodeName(trackmapName);
-    kfparticle->setContainerName(containerName);
-    kfparticle->setOutputName(outfile);
-    kfparticle->magFieldFile("FIELDMAP_TRACKING");
-
-    kfparticle->dontUseGlobalVertex(false);
-    kfparticle->requireTrackVertexBunchCrossingMatch(false);
-    kfparticle->getAllPVInfo(false);
-    kfparticle->use2Dmatching(false);
-    kfparticle->getTriggerInfo(true);
-    kfparticle->getDetectorInfo(true);
-    kfparticle->GetDetailedTracking(false);
-    kfparticle->getCaloInfo(true);
-    kfparticle->useFakePrimaryVertex(false);
-    kfparticle->saveDST(false);
-    kfparticle->saveParticleContainer(false);
-    kfparticle->saveTrackContainer(false);
-
-    // —— 先不开 PID，保证带量 —— 之后再开来提纯
-    kfparticle->usePID(false);
-    kfparticle->setPIDacceptFraction(1.0);
-    kfparticle->allowZeroMassTracks(true);
+    // —— 电子质量假设（关键） ——
+    kf->usePID(true);
+    kf->setPIDacceptFraction(0.40);     // 0.30–0.50 可扫
+    kf->allowZeroMassTracks(false);     // 禁止 m=0 腿
 
     // —— conversion 拓扑：不约束到主顶点 ——
-    kfparticle->constrainToPrimaryVertex(false);
-    kfparticle->setMinDIRA(0.995);                    // 先松，确认有量；之后可收至 0.9995–0.9998
-    kfparticle->setDecayLengthRange_XY(1.5, 30.0);    // cm：覆盖 Beampipe/MVTX/INTT
-    kfparticle->setDecayLengthRange(0.0, FLT_MAX);
+    kf->constrainToPrimaryVertex(false);
+    kf->setMinDIRA(0.99985);            // 指向性更强（必要时降到 0.9997）
+    // Barrel(真空管+MVTX) 半径段：2.0–5.0 cm
+    kf->setDecayLengthRange_XY(2.0, 5.0);
+    // 若想覆盖 INTT，可另起一个模块把上面改为：kf->setDecayLengthRange_XY(6.5, 12.5);
+    kf->setDecayLengthRange(0.0, FLT_MAX);
 
-    // 母质量 ~ 0：上限先放到 80 MeV，保证不“卡死”
-    kfparticle->setMinimumMass(-1.0);
-    kfparticle->setMaximumMass(0.08);                 // GeV；有量后再收至 0.05/0.04
+    // —— 母质量接近 0 ——
+    kf->setMinimumMass(-1.0);
+    kf->setMaximumMass(0.035);          // 35 MeV；如量少可放到 0.05
 
-    // 顶点/几何质量门：先松
-    kfparticle->setMaximumVertexchi2nDOF(30.0);
-    kfparticle->setMaximumDaughterDCA(0.30);          // cm
-    kfparticle->setMaximumDaughterDCA_XY(0.30);       // cm
+    // —— 顶点/几何质量 ——
+    kf->setMaximumVertexchi2nDOF(8.0);  // 8–10
+    kf->setMaximumDaughterDCA(0.08);    // cm
+    kf->setMaximumDaughterDCA_XY(0.08); // cm
+    kf->setMotherIPchi2(FLT_MAX);       // 对 conversion 不强约束
+    kf->setFlightDistancechi2(-1.0);
+    kf->setDecayTimeRange_XY(-1e4, FLT_MAX);
+    kf->setDecayTimeRange(-1e4, FLT_MAX);
+    kf->setMinDecayTimeSignificance(-1e5);
+    kf->setMinDecayLengthSignificance(-1e5);
+    kf->setMinDecayLengthSignificance_XY(-1e5);
 
-    // 剩余与时间相关的量 先放开
-    kfparticle->setMotherIPchi2(FLT_MAX);
-    kfparticle->setFlightDistancechi2(-1.0);
-    kfparticle->setDecayTimeRange_XY(-1e4, FLT_MAX);
-    kfparticle->setDecayTimeRange(-1e4, FLT_MAX);
-    kfparticle->setMinDecayTimeSignificance(-1e5);
-    kfparticle->setMinDecayLengthSignificance(-1e5);
-    kfparticle->setMinDecayLengthSignificance_XY(-1e5);
+    // —— 轨迹质量 ——
+    kf->bunchCrossingZeroOnly(false);   // crossing 可靠再开
+    kf->setMinMVTXhits(0);
+    kf->setMinINTThits(0);
+    kf->setMinTPChits(35);              // 35–40 提纯明显
+    kf->setMinimumTrackPT(0.35);        // 0.35–0.5 GeV；量很少可降到 0.30
+    kf->setMaximumTrackchi2nDOF(15.0);  // 15–20
+    kf->setMaximumTrackPTchi2(FLT_MAX);
+    kf->setMinimumTrackIPchi2(-1.0);    // 如组合高，可设 ≥4
 
-    // —— 轨迹质量：带量为主 ——
-    kfparticle->bunchCrossingZeroOnly(false);         // crossing 未必可靠，先关
-    kfparticle->setMinMVTXhits(0);
-    kfparticle->setMinINTThits(0);
-    kfparticle->setMinTPChits(25);                    // 有量后可提到 35–40 以提纯
-    kfparticle->setMinimumTrackPT(0.20);              // GeV；有量后提到 0.3–0.5
-    kfparticle->setMaximumTrackchi2nDOF(30.0);        // 之后可收 20
-    kfparticle->setMaximumTrackPTchi2(FLT_MAX);
-    kfparticle->setMinimumTrackIPchi2(-1.0);          // 需要再抑制本底时可设 ≥4
+    // —— EMCal 匹配 + 能量阈（提纯关键） ——
+    kf->set_emcal_radius_user(new_cemc_rad); // 102.9
+    kf->set_dphi_cut_low(-0.015);
+    kf->set_dphi_cut_high( 0.040);
+    kf->set_dz_cut_low(-3.0);
+    kf->set_dz_cut_high( 3.0);
+    kf->set_emcal_e_low_cut(0.25);      // GeV
+    kf->requireTrackEMCalMatch(true);
 
-    // —— EMCal 匹配：先不强制，确认看到“靠 0 的峰”再开 —— 
-    kfparticle->set_emcal_radius_user(new_cemc_rad);  // 你外部的 102.9
-    kfparticle->set_dphi_cut_low(-0.30);
-    kfparticle->set_dphi_cut_high( 0.30);
-    kfparticle->set_dz_cut_low(-15.0);
-    kfparticle->set_dz_cut_high( 15.0);
-    kfparticle->set_emcal_e_low_cut(0.0);
-    kfparticle->requireTrackEMCalMatch(false);
+    // —— 母参数 ——
+    kf->setMotherPT(0.0);
+    kf->setMaximumMotherVertexVolume(FLT_MAX);
 
-    // 母粒子其他约束
-    kfparticle->setMotherPT(0.0);
-    kfparticle->setMaximumMotherVertexVolume(FLT_MAX);
-
-    se->registerSubsystem(kfparticle);
+    se->registerSubsystem(kf);
 }
 
 // // KFP K reco to ensure the code is working
