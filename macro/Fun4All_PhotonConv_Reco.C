@@ -88,64 +88,64 @@ R__LOAD_LIBRARY(libzdcinfo.so)
 // 预筛 KFP：用 pt / chi2/ndf / ndf / crossing 控制规模（不依赖子探测器命中接口）
 class PreKFPFilter : public SubsysReco {
  public:
-  PreKFPFilter(double min_pt=0.5, double max_chi2ndf=30.0, unsigned min_ndf=30,
-               bool bunch0_only=true, unsigned long long max_pairs=200000ULL)
-  : SubsysReco("PreKFPFilter"),
-    m_minPt(min_pt), m_maxChi2NDF(max_chi2ndf), m_minNDF(min_ndf),
-    m_bunch0(bunch0_only), m_maxPairs(max_pairs) {}
+    PreKFPFilter(double min_pt=0.5, double max_chi2ndf=30.0, unsigned min_ndf=30,
+                 bool bunch0_only=true, unsigned long long max_pairs=200000ULL)
+    : SubsysReco("PreKFPFilter"),
+        m_minPt(min_pt), m_maxChi2NDF(max_chi2ndf), m_minNDF(min_ndf),
+        m_bunch0(bunch0_only), m_maxPairs(max_pairs) {}
 
-  int process_event(PHCompositeNode* topNode) override {
-    auto trkmap = findNode::getClass<SvtxTrackMap>(topNode, "SvtxTrackMap");
-    if (!trkmap) return Fun4AllReturnCodes::EVENT_OK;
+    int process_event(PHCompositeNode* topNode) override {
+        auto trkmap = findNode::getClass<SvtxTrackMap>(topNode, "SvtxTrackMap");
+        if (!trkmap) return Fun4AllReturnCodes::EVENT_OK;
 
-    size_t n_pos=0, n_neg=0, n_good=0;
-    for (auto it = trkmap->begin(); it != trkmap->end(); ++it) {
-      const SvtxTrack* t = it->second;
-      if (!t) continue;
+        size_t n_pos=0, n_neg=0, n_good=0;
+        for (auto it = trkmap->begin(); it != trkmap->end(); ++it) {
+            const SvtxTrack* t = it->second;
+            if (!t) continue;
 
-      // 1) 基本质量：pt / chi2/ndf / ndf(与命中数相关)
-      const unsigned ndf = std::max(1u, t->get_ndf());
-      const double chi2ndf = t->get_chisq() / ndf;
-      if (t->get_pt() < m_minPt) continue;
-      if (chi2ndf > m_maxChi2NDF) continue;
-      if (ndf < m_minNDF) continue;
+            // 1) 基本质量：pt / chi2/ndf / ndf(与命中数相关)
+            const unsigned ndf = std::max(1u, t->get_ndf());
+            const double chi2ndf = t->get_chisq() / ndf;
+            if (t->get_pt() < m_minPt) continue;
+            if (chi2ndf > m_maxChi2NDF) continue;
+            if (ndf < m_minNDF) continue;
 
-      // 2) 束团选择（如果 API 不支持 get_crossing，可把这几行注释掉）
-      if (m_bunch0) {
-        // 新接口通常叫 get_crossing()
-        if (t->get_crossing() != 0) continue;
-      }
+            // 2) 束团选择（如果 API 不支持 get_crossing，可把这几行注释掉）
+            if (m_bunch0) {
+            // 新接口通常叫 get_crossing()
+            if (t->get_crossing() != 0) continue;
+            }
 
-      ++n_good;
-      (t->get_charge() > 0 ? ++n_pos : ++n_neg);
+            ++n_good;
+            (t->get_charge() > 0 ? ++n_pos : ++n_neg);
+        }
+
+        // K_S^0 异号对上界；保守一点可改用 n_good*(n_good-1)/2
+        const unsigned long long pairs = 1ULL * n_pos * n_neg;
+
+        if (Verbosity() > 0) {
+            auto rc = recoConsts::instance();
+            std::cout << "[PreKFPFilter] run=" << rc->get_IntFlag("RUNNUMBER")
+                    << " nTracks=" << trkmap->size()
+                    << " n_good=" << n_good
+                    << " (pos=" << n_pos << ", neg=" << n_neg << ")"
+                    << " pairs_upper=" << pairs << std::endl;
+        }
+
+        if (pairs > m_maxPairs) {
+            if (Verbosity() > 0)
+            std::cout << "[PreKFPFilter] discard: pairs " << pairs
+                        << " > " << m_maxPairs << std::endl;
+            return Fun4AllReturnCodes::DISCARDEVENT;
+        }
+        return Fun4AllReturnCodes::EVENT_OK;
     }
 
-    // K_S^0 异号对上界；保守一点可改用 n_good*(n_good-1)/2
-    const unsigned long long pairs = 1ULL * n_pos * n_neg;
-
-    if (Verbosity() > 0) {
-      auto rc = recoConsts::instance();
-      std::cout << "[PreKFPFilter] run=" << rc->get_IntFlag("RUNNUMBER")
-                << " nTracks=" << trkmap->size()
-                << " n_good=" << n_good
-                << " (pos=" << n_pos << ", neg=" << n_neg << ")"
-                << " pairs_upper=" << pairs << std::endl;
-    }
-
-    if (pairs > m_maxPairs) {
-      if (Verbosity() > 0)
-        std::cout << "[PreKFPFilter] discard: pairs " << pairs
-                  << " > " << m_maxPairs << std::endl;
-      return Fun4AllReturnCodes::DISCARDEVENT;
-    }
-    return Fun4AllReturnCodes::EVENT_OK;
-  }
-
- private:
-  double m_minPt, m_maxChi2NDF;
-  unsigned m_minNDF;
-  bool m_bunch0;
-  unsigned long long m_maxPairs;
+    private:
+    double m_minPt, m_maxChi2NDF;
+    unsigned m_minNDF;
+    bool m_bunch0;
+    unsigned long long m_maxPairs;
 };
 
 void Fun4All_PhotonConv_Reco(
@@ -245,7 +245,7 @@ void Fun4All_PhotonConv_Reco(
 
     auto hitsin_calo = new Fun4AllDstInputManager("DSTin_calo");
     hitsin_calo->fileopen(inputCaloFile);
-    // se->registerInputManager(hitsin_calo);
+    se->registerInputManager(hitsin_calo);
 
     auto hitsin_cluster = new Fun4AllDstInputManager("DSTin_cluster");
     hitsin_cluster->fileopen(inputTrkrClusterFile);
@@ -309,16 +309,16 @@ void Fun4All_PhotonConv_Reco(
     TriggerRunInfoReco *triggerruninforeco = new TriggerRunInfoReco();
     se->registerSubsystem(triggerruninforeco);
 
-    // check track multiplicity, skip event if too large
-    auto prekfp = new PreKFPFilter(
-      /*min_pt=*/0.0,          // ≤ KFP 的 0.0
-      /*max_chi2ndf=*/120.0,   // ≥ KFP 的 100
-      /*min_ndf=*/20,          // ~≈ TPC hits 20 的松 proxy，可设 15–20
-      /*bunch0_only=*/false,   // 与 requireTrackVertexBunchCrossingMatch 不等价；先关掉以免误杀
-      /*max_pairs=*/200000ULL  // 用这个硬阈值来跳大事件；按内存再调
-    );
-    prekfp->Verbosity(1);
-    se->registerSubsystem(prekfp);
+    // // check track multiplicity, skip event if too large
+    // auto prekfp = new PreKFPFilter(
+    //     /*min_pt=*/0.0,          // ≤ KFP 的 0.0
+    //     /*max_chi2ndf=*/120.0,   // ≥ KFP 的 100
+    //     /*min_ndf=*/20,          // ~≈ TPC hits 20 的松 proxy，可设 15–20
+    //     /*bunch0_only=*/false,   // 与 requireTrackVertexBunchCrossingMatch 不等价；先关掉以免误杀
+    //     /*max_pairs=*/200000ULL  // 用这个硬阈值来跳大事件；按内存再调
+    // );
+    // prekfp->Verbosity(1);
+    // se->registerSubsystem(prekfp);
 
     // output directory and file name setting
     string trailer = "_" + nice_runnumber.str() + "_" + nice_segment.str() + "_" + nice_index.str() + ".root";
