@@ -36,7 +36,7 @@ void AnaKFPtree(
     // std::vector <double> *clus_X = nullptr;
     float K_S0_mass;
 
-    tree_data->SetBranchAddress("K_S0_mass", & K_S0_mass);
+    tree_data->SetBranchAddress("gamma_mass", & K_S0_mass);
 
     Long64_t nentries = tree_data->GetEntries();
     for (Long64_t i=0; i<nentries; ++i) 
