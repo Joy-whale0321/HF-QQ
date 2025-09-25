@@ -384,20 +384,22 @@ void Fun4All_PhotonConv_Reco(
 void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = "K_S0 -> pi^+ pi^-", std::string outfile = "KFP.root", std::string trackmapName = "SvtxTrackMap", std::string containerName = "KFParticle")
 {
     auto se = Fun4AllServer::instance();
-    auto kfparticle = new KFParticle_sPHENIX(module_name);
-    kfparticle->Verbosity(0);  // 先开点日志
+
+    // --- module ---
+    KFParticle_sPHENIX* kfparticle = new KFParticle_sPHENIX(module_name);
+    kfparticle->Verbosity(0);                                // 调试时可设 1
     kfparticle->setDecayDescriptor(decaydescriptor);
 
-    // 基础
+    // --- node & io ---
     kfparticle->setTrackMapNodeName(trackmapName);
     kfparticle->setContainerName(containerName);
     kfparticle->setOutputName(outfile);
     kfparticle->magFieldFile("FIELDMAP_TRACKING");
 
+    // --- basics ---
     kfparticle->dontUseGlobalVertex(false);
     kfparticle->requireTrackVertexBunchCrossingMatch(false);
     kfparticle->getAllPVInfo(false);
-    kfparticle->allowZeroMassTracks(true);
     kfparticle->use2Dmatching(false);
     kfparticle->getTriggerInfo(true);
     kfparticle->getDetectorInfo(true);
@@ -408,20 +410,30 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->saveParticleContainer(false);
     kfparticle->saveTrackContainer(false);
 
-    // ——— 顶点/几何：尽量放开（只是 sanity） ———
+    // --- 电子质量假设（关键） ---
+    kfparticle->usePID(true);                                // 打开 PID（TPC dE/dx 等）
+    kfparticle->setPIDacceptFraction(0.40);                  // 0.3–0.5 之间可扫
+    kfparticle->allowZeroMassTracks(false);                  // 禁止 m=0 腿参与
+
+    // --- conversion 拓扑：不约束到主顶点 ---
     kfparticle->constrainToPrimaryVertex(false);
-    kfparticle->setMinDIRA(-1.1);                 // 先完全放开
-    kfparticle->setDecayLengthRange_XY(0.5, 40.0);// 大范围
+
+    // 指向性（母动量与 PV->SV 夹角小）+ 材料半径窗口
+    kfparticle->setMinDIRA(0.9997);                          // 可在 0.9995–0.9998 间调
+    kfparticle->setDecayLengthRange_XY(2.0, 20.0);           // [cm] 可分两段 1.5–5 / 5–20
     kfparticle->setDecayLengthRange(0.0, FLT_MAX);
 
+    // 母质量 ~ 0：收紧窗到 ~50 MeV
     kfparticle->setMinimumMass(-1.0);
-    kfparticle->setMaximumMass(0.20);             // 200 MeV，非常宽
+    kfparticle->setMaximumMass(0.05);                        // [GeV] 需要更干净可 0.03–0.04
 
-    kfparticle->setMaximumVertexchi2nDOF(100.0);  // 顶点 χ² 放宽
-    kfparticle->setMaximumDaughterDCA(0.5);       // cm
-    kfparticle->setMaximumDaughterDCA_XY(0.5);    // cm
+    // 顶点品质 & 女儿几何关系
+    kfparticle->setMaximumVertexchi2nDOF(10.0);
+    kfparticle->setMaximumDaughterDCA(0.10);                 // [cm]
+    kfparticle->setMaximumDaughterDCA_XY(0.10);              // [cm]
+
+    // 这些对 conversion 不敏感，放宽
     kfparticle->setMotherIPchi2(FLT_MAX);
-
     kfparticle->setFlightDistancechi2(-1.0);
     kfparticle->setDecayTimeRange_XY(-1e4, FLT_MAX);
     kfparticle->setDecayTimeRange(-1e4, FLT_MAX);
@@ -429,26 +441,30 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->setMinDecayLengthSignificance(-1e5);
     kfparticle->setMinDecayLengthSignificance_XY(-1e5);
 
-    // ——— 轨迹质量（非常松） ———
-    kfparticle->bunchCrossingZeroOnly(false);
+    // --- 轨迹质量（抑制劣质组合） ---
+    kfparticle->bunchCrossingZeroOnly(false);                // 此批 DST 的 crossing 可信前先别开
     kfparticle->setMinMVTXhits(0);
     kfparticle->setMinINTThits(0);
-    kfparticle->setMinTPChits(20);
-    kfparticle->setMinimumTrackPT(0.15);
+    kfparticle->setMinTPChits(35);                           // 25→35 可提高纯度
+    kfparticle->setMinimumTrackPT(0.30);                     // [GeV] 可视量再抬到 0.5
     kfparticle->setMaximumTrackPTchi2(FLT_MAX);
-    kfparticle->setMaximumTrackchi2nDOF(50.0);
-    kfparticle->setMinimumTrackIPchi2(-1.0);
+    kfparticle->setMaximumTrackchi2nDOF(20.0);
+    kfparticle->setMinimumTrackIPchi2(-1.0);                 // 若组合仍高可设 ≥4
 
-    // ——— 不用 EMCal 匹配 ———
-    kfparticle->set_emcal_radius_user(new_cemc_rad);
-    kfparticle->set_dphi_cut_low(-0.5);
-    kfparticle->set_dphi_cut_high( 0.5);
-    kfparticle->set_dz_cut_low(-20.0);
-    kfparticle->set_dz_cut_high( 20.0);
+    // --- Track–EMCal：先不强制，确认看到“靠 0 的峰”后再提纯 ---
+    kfparticle->set_emcal_radius_user(new_cemc_rad);         // 你外面定义的 102.9
+    kfparticle->set_dphi_cut_low(-0.30);                     // 仅作为读出，不强制
+    kfparticle->set_dphi_cut_high( 0.30);
+    kfparticle->set_dz_cut_low(-15.0);
+    kfparticle->set_dz_cut_high( 15.0);
     kfparticle->set_emcal_e_low_cut(0.0);
     kfparticle->requireTrackEMCalMatch(false);
 
-    // ——— 母参数 ———
+    // （提纯阶段可以改为：requireTrackEMCalMatch(true)，并配
+    //   dphi [-0.015,0.040], dz [-3,3], emcal_e_low_cut ≥0.25 GeV，
+    //   以及后处理 0.6<E/p<1.5）
+
+    // --- 母参数 ---
     kfparticle->setMotherPT(0.0);
     kfparticle->setMaximumMotherVertexVolume(FLT_MAX);
 
