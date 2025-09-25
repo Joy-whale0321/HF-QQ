@@ -48,6 +48,8 @@ void AnaKFPtree(
 
     outfile.cd();
     h1_mass->Write();
+
+    std::cout<<"ana finished"<<std::endl;
 }
 
 
