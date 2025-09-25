@@ -318,7 +318,7 @@ void Fun4All_PhotonConv_Reco(
         /*max_pairs=*/ULLONG_MAX   // 永不触发丢事件
     );
     mon->Verbosity(1);           // 设为 1 或 2，多点日志
-    se->registerSubsystem(mon);
+    // se->registerSubsystem(mon);
 
     // output directory and file name setting
     string trailer = "_" + nice_runnumber.str() + "_" + nice_segment.str() + "_" + nice_index.str() + ".root";
@@ -385,7 +385,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
 {
     auto se = Fun4AllServer::instance();
     auto kfparticle = new KFParticle_sPHENIX(module_name);
-    kfparticle->Verbosity(1);  // 先开点日志
+    kfparticle->Verbosity(0);  // 先开点日志
     kfparticle->setDecayDescriptor(decaydescriptor);
 
     // 基础
