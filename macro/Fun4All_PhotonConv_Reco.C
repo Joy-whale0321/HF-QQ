@@ -149,7 +149,7 @@ class PreKFPFilter : public SubsysReco {
 };
 
 void Fun4All_PhotonConv_Reco(
-    const int nEvents = 10,
+    const int nEvents = 100,
     const std::string trkr_clusterfilename = "DST_TRKR_CLUSTER_run2pp_ana505_2024p023_v001-00053877-00000.root",
     const std::string trkr_clusterdir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana505_2024p023_v001/DST_TRKR_CLUSTER/run_00053800_00053900/dst/",
     const std::string trkr_trackfilename = "DST_TRKR_TRACKS_run2pp_ana506_2024p023_v001-00053877-00000.root",
@@ -384,16 +384,20 @@ void Fun4All_PhotonConv_Reco(
 void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = "K_S0 -> pi^+ pi^-", std::string outfile = "KFP.root", std::string trackmapName = "SvtxTrackMap", std::string containerName = "KFParticle")
 {
     auto se = Fun4AllServer::instance();
-    //KFParticle setup
-    KFParticle_sPHENIX *kfparticle = new KFParticle_sPHENIX(module_name);
+
+    // --- KFParticle 模块 ---
+    KFParticle_sPHENIX* kfparticle = new KFParticle_sPHENIX(module_name);
     kfparticle->Verbosity(0);
     kfparticle->setDecayDescriptor(decaydescriptor);
-    
+
+    // 节点与输出
     kfparticle->setTrackMapNodeName(trackmapName);
     kfparticle->setContainerName(containerName);
+    kfparticle->setOutputName(outfile);
+    kfparticle->magFieldFile("FIELDMAP_TRACKING");
 
-    //Basic node selection and configuration
-    kfparticle->dontUseGlobalVertex(false);
+    // ===== 基本开关（与信息保存） =====
+    kfparticle->dontUseGlobalVertex(false);            // 允许使用全局主顶点（不等于约束到主顶点）
     kfparticle->requireTrackVertexBunchCrossingMatch(false);
     kfparticle->getAllPVInfo(false);
     kfparticle->allowZeroMassTracks(true);
@@ -401,67 +405,77 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->getTriggerInfo(true);
     kfparticle->getDetectorInfo(true);
     kfparticle->GetDetailedTracking(false);
-    kfparticle->getCaloInfo(true);
+    kfparticle->getCaloInfo(true);                     // 需要 EMCal 匹配信息
     kfparticle->useFakePrimaryVertex(false);
     kfparticle->saveDST(false);
     kfparticle->saveParticleContainer(false);
     kfparticle->saveTrackContainer(false);
-    kfparticle->magFieldFile("FIELDMAP_TRACKING");
 
-    //PV to SV cuts
-    kfparticle->constrainToPrimaryVertex(true);
-    kfparticle->setMotherIPchi2(FLT_MAX);
-    kfparticle->setFlightDistancechi2(-1.);
-    kfparticle->setMinDIRA(-1.1);
-    kfparticle->setDecayLengthRange(0., FLT_MAX);
-    kfparticle->setDecayLengthRange_XY(-10000, FLT_MAX);
-    kfparticle->setDecayTimeRange_XY(-10000, FLT_MAX);
-    kfparticle->setDecayTimeRange(-10000, FLT_MAX);
+    // ===== 顶点/几何拓扑切（conversion 的关键） =====
+    // 1) 不要把母粒子约束到主顶点（γ 在材料处转化）
+    kfparticle->constrainToPrimaryVertex(false);
+
+    // 2) DIRA -> 1：母动量与 (PV->SV) 同向。可 0.9995–0.9999 视纯度调紧
+    kfparticle->setMinDIRA(0.9995);
+
+    // 3) 飞行距离（XY）= 转化半径范围：覆盖 MVTX/INTT 材料半径
+    //    建议分两段扫：1.5–5 cm（Beampipe/MVTX），5–20 cm（INTT），此处先设统一 2–20 cm
+    kfparticle->setDecayLengthRange_XY(2.0, 20.0);     // [cm] 需要更干净可缩窄
+
+    // 4) 总飞行距离可放宽（主要靠 XY 控制）
+    kfparticle->setDecayLengthRange(0.0, FLT_MAX);
+
+    // 5) 母粒子质量近 0：最大质量窗收紧（可 0.02–0.06 GeV 扫）
+    kfparticle->setMinimumMass(-1.0);
+    kfparticle->setMaximumMass(0.05);                  // [GeV] 先 50 MeV
+
+    // 6) 顶点品质 / 女儿几何关系
+    kfparticle->setMaximumVertexchi2nDOF(10.0);        // 顶点 χ2/ndf 收紧
+    kfparticle->setMaximumDaughterDCA(0.10);           // [cm] 两女儿在 SV 的互相 DCA 很小
+    kfparticle->setMaximumDaughterDCA_XY(0.10);        // [cm] XY 平面同样收紧
+
+    // 7) （可选）让母“指向 PV”但别太狠；配合 DIRA 使用
+    //    数值过小会掉效率；如果本底仍高，可改成 10–25 再试
+    kfparticle->setMotherIPchi2(25.0);
+
+    // 其余时间窗/显著性（对 conversion 不敏感，放宽）
+    kfparticle->setFlightDistancechi2(-1.0);
+    kfparticle->setDecayTimeRange_XY(-10000.0, FLT_MAX);
+    kfparticle->setDecayTimeRange(-10000.0, FLT_MAX);
     kfparticle->setMinDecayTimeSignificance(-1e5);
     kfparticle->setMinDecayLengthSignificance(-1e5);
     kfparticle->setMinDecayLengthSignificance_XY(-1e5);
-    kfparticle->setMaximumDaughterDCA_XY(FLT_MAX);
-    kfparticle->setMaximumDaughterDCA(FLT_MAX);
 
-    //Track parameters
-    kfparticle->bunchCrossingZeroOnly(true);
+    // ===== 轨迹质量切 =====
+    kfparticle->bunchCrossingZeroOnly(true);           // 只取 bunch crossing = 0（pp 模式建议开）
     kfparticle->setMinMVTXhits(0);
     kfparticle->setMinINTThits(0);
-    kfparticle->setMinTPChits(25);
-    kfparticle->setMinimumTrackPT(0.5);
+    kfparticle->setMinTPChits(35);                     // 提高 TPC 采样（20->35）可有效降假组合
+    kfparticle->setMinimumTrackPT(0.3);                // [GeV] 0.3–0.5 之间调
     kfparticle->setMaximumTrackPTchi2(FLT_MAX);
-    kfparticle->setMinimumTrackIPchi2(-1.);
-    kfparticle->setMinimumTrackIP(-1.);
-    kfparticle->setMaximumTrackchi2nDOF(300.);
+    kfparticle->setMaximumTrackchi2nDOF(20.0);         // 收紧 χ2/ndf（原 100/300 过松）
+    // 轨迹来自“次级”：对 PV 有一定 IP 显著性下限
+    kfparticle->setMinimumTrackIPchi2(4.0);            // 也可配合 setMinimumTrackIP(0.05 cm)
 
-    //Track-Calo matching
+    // ===== Track–EMCal 匹配（进一步抑制软本底/假匹配） =====
+    // 你在外部设置了 new_cemc_rad，沿用之
     kfparticle->set_emcal_radius_user(new_cemc_rad);
-    //narrow window
-    kfparticle->set_dphi_cut_low(-0.02); //rad
-    kfparticle->set_dphi_cut_high(0.09); //rad
-    kfparticle->set_dz_cut_low(-4); //cm
-    kfparticle->set_dz_cut_high(4); //cm
-    //loose window
-    /*
-    kfparticle->set_dphi_cut_low(-0.2); //rad
-    kfparticle->set_dphi_cut_high(0.2); //rad
-    kfparticle->set_dz_cut_low(-10); //cm
-    kfparticle->set_dz_cut_high(10); //cm
-    */
-    kfparticle->set_emcal_e_low_cut(0.2); //GeV
+
+    // 窗口略收紧（先几何，再考虑 E/p）
+    kfparticle->set_dphi_cut_low(-0.015);              // [rad]
+    kfparticle->set_dphi_cut_high( 0.040);             // [rad]
+    kfparticle->set_dz_cut_low(-3.0);                  // [cm]
+    kfparticle->set_dz_cut_high( 3.0);                 // [cm]
+
+    // 能量阈微抬，防杂质
+    kfparticle->set_emcal_e_low_cut(0.25);             // [GeV]
     kfparticle->requireTrackEMCalMatch(true);
 
-    //Vertex parameters
-    kfparticle->setMaximumVertexchi2nDOF(FLT_MAX);
-
-    //Parent parameters
-    kfparticle->setMotherPT(0);
-    kfparticle->setMinimumMass(-1);
-    kfparticle->setMaximumMass(15);
+    // ===== 母粒子/容积保护（保持宽松） =====
+    kfparticle->setMotherPT(0.0);
     kfparticle->setMaximumMotherVertexVolume(FLT_MAX);
 
-    kfparticle->setOutputName(outfile);
-
+    // 注册
     se->registerSubsystem(kfparticle);
 }
 
