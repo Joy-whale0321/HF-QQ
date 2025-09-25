@@ -310,15 +310,15 @@ void Fun4All_PhotonConv_Reco(
     se->registerSubsystem(triggerruninforeco);
 
     // // check track multiplicity, skip event if too large
-    // auto prekfp = new PreKFPFilter(
-    //     /*min_pt=*/0.0,          // ≤ KFP 的 0.0
-    //     /*max_chi2ndf=*/120.0,   // ≥ KFP 的 100
-    //     /*min_ndf=*/20,          // ~≈ TPC hits 20 的松 proxy，可设 15–20
-    //     /*bunch0_only=*/false,   // 与 requireTrackVertexBunchCrossingMatch 不等价；先关掉以免误杀
-    //     /*max_pairs=*/200000ULL  // 用这个硬阈值来跳大事件；按内存再调
-    // );
-    // prekfp->Verbosity(1);
-    // se->registerSubsystem(prekfp);
+    auto mon = new PreKFPFilter(
+        /*min_pt=*/0.0,
+        /*max_chi2ndf=*/1e9,
+        /*min_ndf=*/0,
+        /*bunch0_only=*/false,     // 先不要限定 crossing
+        /*max_pairs=*/ULLONG_MAX   // 永不触发丢事件
+    );
+    mon->Verbosity(1);           // 设为 1 或 2，多点日志
+    se->registerSubsystem(mon);
 
     // output directory and file name setting
     string trailer = "_" + nice_runnumber.str() + "_" + nice_segment.str() + "_" + nice_index.str() + ".root";
@@ -385,7 +385,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
 {
     auto se = Fun4AllServer::instance();
     KFParticle_sPHENIX* kfparticle = new KFParticle_sPHENIX(module_name);
-    kfparticle->Verbosity(0);
+    kfparticle->Verbosity(1);
     kfparticle->setDecayDescriptor(decaydescriptor);
 
     // 基础
