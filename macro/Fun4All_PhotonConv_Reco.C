@@ -439,8 +439,8 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     //narrow window
     kfparticle->set_dphi_cut_low(-0.02); //rad
     kfparticle->set_dphi_cut_high(0.09); //rad
-    kfparticle->set_dz_cut_low(-2); //cm
-    kfparticle->set_dz_cut_high(2); //cm
+    kfparticle->set_dz_cut_low(-5); //cm
+    kfparticle->set_dz_cut_high(5); //cm
     //loose window
     /*
     kfparticle->set_dphi_cut_low(-0.2); //rad
