@@ -332,7 +332,7 @@ void Fun4All_PhotonConv_Reco(
         system(makeDirectory.c_str());
     }
     std::string PhotonConv_outfile_string(PhotonConv_outfile.Data());
-    KFPReco("PhotonConvReco", "[gamma -> e+ e-]cc", PhotonConv_outfile_string);
+    KFPReco("PhotonConvReco", "[gamma -> e^+ e^-]cc", PhotonConv_outfile_string);
     // KFPReco("PhotonConvReco", "[K_S0 -> pi^+ pi^-]cc", PhotonConv_outfile_string);
 
     std::string PhotonConv_reco_likesign_dir = outdir + "/PhotonConv_reco_likesign/inReconstruction/" + to_string  (runnumber) + "/";
@@ -344,7 +344,7 @@ void Fun4All_PhotonConv_Reco(
         system(makeDirectory.c_str());
     }
     std::string PhotonConv_outfile_likesign_string(PhotonConv_likesign_outfile.Data());
-    KFPReco("PhotonConvReco_likesign", "[gamma -> e+ e+]cc", PhotonConv_outfile_likesign_string);
+    KFPReco("PhotonConvReco_likesign", "[gamma -> e^+ e^+]cc", PhotonConv_outfile_likesign_string);
     // KFPReco("PhotonConvReco_likesign", "[K_S0 -> pi^+ pi^+]cc", PhotonConv_outfile_likesign_string);
 
     se->skip(stepsize*index);
