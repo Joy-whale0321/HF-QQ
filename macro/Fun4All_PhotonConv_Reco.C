@@ -437,10 +437,10 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     //Track-Calo matching
     kfparticle->set_emcal_radius_user(new_cemc_rad);
     //narrow window
-    kfparticle->set_dphi_cut_low(-0.02); //rad
-    kfparticle->set_dphi_cut_high(0.02); //rad
-    kfparticle->set_dz_cut_low(-2); //cm
-    kfparticle->set_dz_cut_high(2); //cm
+    kfparticle->set_dphi_cut_low(-0.01); //rad
+    kfparticle->set_dphi_cut_high(0.01); //rad
+    kfparticle->set_dz_cut_low(-1); //cm
+    kfparticle->set_dz_cut_high(1); //cm
     //loose window
     /*
     kfparticle->set_dphi_cut_low(-0.2); //rad
