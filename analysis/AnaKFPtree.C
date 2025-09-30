@@ -9,11 +9,11 @@
 void AnaKFPtree(
     // const char* filename="/mnt/e/sphenix/HF-QQ/output/K0s_reco_4M_0918.root",
     // const char* filename="/mnt/e/sphenix/HF-QQ/output/K0s_bkgreco_4M_0918.root",
-    const char* filename="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/output/PhotonConv/PhotonConv_reco/Reconstructed/53046/Conv_reco_4M.root",
+    const char* filename="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/output/PhotonConv/PhotonConv_reco_likesign/Reconstructed/53046/Conv_bkgreco_4M.root",
     const char* treename="DecayTree",
     // const char* outputname="/mnt/e/sphenix/HF-QQ/output/K0s_reco_4M_0918_ana.root"
     // const char* outputname="/mnt/e/sphenix/HF-QQ/output/K0s_bkgreco_4M_0918_ana.root"
-    const char* outputname="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/analysis/output/Conv_reco_4M_ana.root"
+    const char* outputname="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/analysis/output/Conv_bkgreco_4M_ana.root"
 ) 
 {
     TFile outfile(outputname, "RECREATE");
@@ -49,7 +49,7 @@ void AnaKFPtree(
     outfile.cd();
     h1_mass->Write();
 
-    std::cout<<"ana finished"<<std::endl;
+    std::cout<<"Ana Finished!"<<std::endl;
 }
 
 
