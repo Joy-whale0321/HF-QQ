@@ -210,7 +210,7 @@ void Fun4All_PhotonConv_Reco(
     // CDB and some fundamental setting need ask
     Enable::CDB = true;
     // rc->set_StringFlag("CDB_GLOBALTAG", "newcdbtag"); // whats this setting? "ProdA_2024"? "newcdbtag"?
-    // rc->set_StringFlag("CDB_GLOBALTAG", "newcdbtag");
+    rc->set_StringFlag("CDB_GLOBALTAG", CDB::global_tag);
     rc->set_uint64Flag("TIMESTAMP", runnumber);
     std::string geofile = CDBInterface::instance()->getUrl("Tracking_Geometry");
 
