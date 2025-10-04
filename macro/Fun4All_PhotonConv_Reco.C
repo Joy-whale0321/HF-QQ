@@ -215,6 +215,10 @@ void Fun4All_PhotonConv_Reco(
     rc->set_uint64Flag("TIMESTAMP", runnumber);
     std::string geofile = CDBInterface::instance()->getUrl("Tracking_Geometry");
 
+    std::cout << "CDB_GLOBALTAG(set) = " << rc->get_StringFlag("CDB_GLOBALTAG") << std::endl;
+    std::cout << "CDB_GLOBALTAG(effective) = " 
+              << CDBInterface::instance()->getGlobalTag() << std::endl;
+
     Fun4AllRunNodeInputManager *ingeo = new Fun4AllRunNodeInputManager("GeoIn");
     ingeo->AddFile(geofile);
     se->registerInputManager(ingeo);
