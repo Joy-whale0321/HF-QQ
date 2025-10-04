@@ -27,6 +27,9 @@ OutPath=$7
 Index=${8}
 StepSize=${9}
 
+# echo "OFFLINE_MAIN=$OFFLINE_MAIN"
+# echo "$LD_LIBRARY_PATH" | grep -o 'release_[^/]*/' | head -1
+
 root.exe -q -l Fun4All_Quarkonium_pp.C\($nEvents,\"${InTrackDst}\",\"${InTrackPath}\",\"${InCaloDst}\",\"${InCaloPath}\",\"${OutPrefix}\",\"${OutPath}\",$Index,$StepSize\)
 
 echo Script done
