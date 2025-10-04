@@ -149,7 +149,7 @@ class PreKFPFilter : public SubsysReco {
 };
 
 void Fun4All_PhotonConv_Reco(
-    const int nEvents = 500,
+    const int nEvents = 10,
     const std::string trkr_clusterfilename = "DST_TRKR_CLUSTER_run2pp_ana505_2024p023_v001-00053046-00002.root",
     const std::string trkr_clusterdir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana505_2024p023_v001/DST_TRKR_CLUSTER/run_00053000_00053100/dst/",
     const std::string trkr_trackfilename = "DST_TRKR_TRACKS_run2pp_ana506_2024p023_v001-00053046-00002.root",
@@ -209,9 +209,9 @@ void Fun4All_PhotonConv_Reco(
 
     // CDB and some fundamental setting need ask
     Enable::CDB = true;
-    // rc->set_StringFlag("CDB_GLOBALTAG", "newcdbtag"); // whats this setting? "ProdA_2024"? "newcdbtag"?
+    rc->set_StringFlag("CDB_GLOBALTAG", "newcdbtag"); // whats this setting? "ProdA_2024"? "newcdbtag"?
     // rc->set_StringFlag("CDB_GLOBALTAG", CDB::global_tag);
-    rc->set_StringFlag("CDB_GLOBALTAG", "2024p023");
+    // rc->set_StringFlag("CDB_GLOBALTAG", "2024p023");
     rc->set_uint64Flag("TIMESTAMP", runnumber);
     std::string geofile = CDBInterface::instance()->getUrl("Tracking_Geometry");
 
