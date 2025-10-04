@@ -33,6 +33,9 @@ InClusterPath=${11}
 echo "InClusterDst is: ${InClusterDst}"
 echo "InClusterPath is: ${InClusterPath}"
 
+echo "OFFLINE_MAIN=$OFFLINE_MAIN"
+echo "$LD_LIBRARY_PATH" | grep -o 'release_[^/]*/' | head -1
+
 root.exe -q -l Fun4All_PhotonConv_Reco.C\($nEvents,\"${InClusterDst}\",\"${InClusterPath}\",\"${InTrackDst}\",\"${InTrackPath}\",\"${InCaloDst}\",\"${InCaloPath}\",\"${OutPrefix}\",\"${OutPath}\",$Index,$StepSize\)
 
 echo Script done
