@@ -429,12 +429,12 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->bunchCrossingZeroOnly(true);
     kfparticle->setMinMVTXhits(0);
     kfparticle->setMinINTThits(0);
-    kfparticle->setMinTPChits(35);
+    kfparticle->setMinTPChits(25);
     kfparticle->setMinimumTrackPT(0.5);
     kfparticle->setMaximumTrackPTchi2(FLT_MAX);
     kfparticle->setMinimumTrackIPchi2(-1.);
     kfparticle->setMinimumTrackIP(-1.);
-    kfparticle->setMaximumTrackchi2nDOF(100.);
+    kfparticle->setMaximumTrackchi2nDOF(300.);
 
     //Track-Calo matching
     kfparticle->set_emcal_radius_user(new_cemc_rad);
