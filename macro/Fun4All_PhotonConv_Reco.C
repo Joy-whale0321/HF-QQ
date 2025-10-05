@@ -448,7 +448,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     // kfparticle->set_dphi_cut_high(0.2); //rad
     // kfparticle->set_dz_cut_low(-10); //cm
     // kfparticle->set_dz_cut_high(10); //cm
-    // kfparticle->set_emcal_e_low_cut(0.8); //GeV
+    // kfparticle->set_emcal_e_low_cut(0.2); //GeV
     // kfparticle->requireTrackEMCalMatch(true);
 
     //Vertex parameters
