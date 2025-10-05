@@ -429,29 +429,29 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->bunchCrossingZeroOnly(true);
     kfparticle->setMinMVTXhits(0);
     kfparticle->setMinINTThits(0);
-    kfparticle->setMinTPChits(25);
+    kfparticle->setMinTPChits(35);
     kfparticle->setMinimumTrackPT(0.5);
     kfparticle->setMaximumTrackPTchi2(FLT_MAX);
     kfparticle->setMinimumTrackIPchi2(-1.);
     kfparticle->setMinimumTrackIP(-1.);
-    kfparticle->setMaximumTrackchi2nDOF(300.);
+    kfparticle->setMaximumTrackchi2nDOF(100.);
 
-    //Track-Calo matching
-    kfparticle->set_emcal_radius_user(new_cemc_rad);
-    //narrow window
-    kfparticle->set_dphi_cut_low(-0.02); //rad
-    kfparticle->set_dphi_cut_high(0.09); //rad
-    kfparticle->set_dz_cut_low(-4); //cm
-    kfparticle->set_dz_cut_high(4); //cm
-    //loose window
-    /*
-    kfparticle->set_dphi_cut_low(-0.2); //rad
-    kfparticle->set_dphi_cut_high(0.2); //rad
-    kfparticle->set_dz_cut_low(-10); //cm
-    kfparticle->set_dz_cut_high(10); //cm
-    */
-    kfparticle->set_emcal_e_low_cut(0.2); //GeV
-    kfparticle->requireTrackEMCalMatch(true);
+    // //Track-Calo matching
+    // kfparticle->set_emcal_radius_user(new_cemc_rad);
+    // //narrow window
+    // kfparticle->set_dphi_cut_low(-0.02); //rad
+    // kfparticle->set_dphi_cut_high(0.09); //rad
+    // kfparticle->set_dz_cut_low(-4); //cm
+    // kfparticle->set_dz_cut_high(4); //cm
+    // //loose window
+    // /*
+    // kfparticle->set_dphi_cut_low(-0.2); //rad
+    // kfparticle->set_dphi_cut_high(0.2); //rad
+    // kfparticle->set_dz_cut_low(-10); //cm
+    // kfparticle->set_dz_cut_high(10); //cm
+    // */
+    // kfparticle->set_emcal_e_low_cut(0.2); //GeV
+    // kfparticle->requireTrackEMCalMatch(true);
 
     //Vertex parameters
     kfparticle->setMaximumVertexchi2nDOF(FLT_MAX);
