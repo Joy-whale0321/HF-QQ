@@ -9,11 +9,11 @@
 void AnaKFPtree(
     // const char* filename="/mnt/e/sphenix/HF-QQ/output/Conv_reco_4M.root",
     // const char* filename="/mnt/e/sphenix/HF-QQ/output/Conv_bkgreco_4M.root",
-    const char* filename="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/output/PhotonConv/PhotonConv_reco_likesign/Reconstructed/53046/Conv_bkgreco_4M.root",
+    const char* filename="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/output/PhotonConv/PhotonConv_reco/Reconstructed/53046/Conv_reco_4M.root",
     const char* treename="DecayTree",
     // const char* outputname="/mnt/e/sphenix/HF-QQ/output/Conv_reco_4M_ana.root"
     // const char* outputname="/mnt/e/sphenix/HF-QQ/output/Conv_bkgreco_4M_ana.root"
-    const char* outputname="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/analysis/output/Conv_bkgreco_4M_ana.root"
+    const char* outputname="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/analysis/output/Conv_reco_4M_ana.root"
 ) 
 {
     TFile outfile(outputname, "RECREATE");
