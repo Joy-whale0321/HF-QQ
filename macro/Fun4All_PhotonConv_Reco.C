@@ -149,7 +149,7 @@ class PreKFPFilter : public SubsysReco {
 };
 
 void Fun4All_PhotonConv_Reco(
-    const int nEvents = 10,
+    const int nEvents = 100,
     const std::string trkr_clusterfilename = "DST_TRKR_CLUSTER_run2pp_ana505_2024p023_v001-00053046-00002.root",
     const std::string trkr_clusterdir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana505_2024p023_v001/DST_TRKR_CLUSTER/run_00053000_00053100/dst/",
     const std::string trkr_trackfilename = "DST_TRKR_TRACKS_run2pp_ana506_2024p023_v001-00053046-00002.root",
