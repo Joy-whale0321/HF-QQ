@@ -422,8 +422,8 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->setMinDecayTimeSignificance(-1e5);
     kfparticle->setMinDecayLengthSignificance(1.0); // JY
     kfparticle->setMinDecayLengthSignificance_XY(2.0); // JY
-    kfparticle->setMaximumDaughterDCA_XY(0.2); // JY
-    kfparticle->setMaximumDaughterDCA(0.2); // JY
+    kfparticle->setMaximumDaughterDCA_XY(0.3); // JY 
+    kfparticle->setMaximumDaughterDCA(0.3); // JY
 
     //Track parameters
     kfparticle->bunchCrossingZeroOnly(true);
