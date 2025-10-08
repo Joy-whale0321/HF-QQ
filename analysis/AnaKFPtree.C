@@ -7,13 +7,13 @@
 #include <cmath>
 
 void AnaKFPtree(
-    // const char* filename="/mnt/e/sphenix/HF-QQ/output/Conv_reco_4M.root",
+    const char* filename="/mnt/e/sphenix/HF-QQ/output/Conv_reco_4M.root",
     // const char* filename="/mnt/e/sphenix/HF-QQ/output/Conv_bkgreco_4M.root",
-    const char* filename="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/output/PhotonConv/PhotonConv_reco_likesign/Reconstructed/53046/Conv_bkgreco_4M.root",
+    // const char* filename="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/output/PhotonConv/PhotonConv_reco_likesign/Reconstructed/53046/Conv_bkgreco_4M.root",
     const char* treename="DecayTree",
-    // const char* outputname="/mnt/e/sphenix/HF-QQ/output/Conv_reco_4M_ana.root"
+    const char* outputname="/mnt/e/sphenix/HF-QQ/output/Conv_reco_4M_ana.root"
     // const char* outputname="/mnt/e/sphenix/HF-QQ/output/Conv_bkgreco_4M_ana.root"
-    const char* outputname="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/analysis/output/Conv_bkgreco_4M_ana.root"
+    // const char* outputname="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/analysis/output/Conv_bkgreco_4M_ana.root"
 ) 
 {
     TFile outfile(outputname, "RECREATE");
@@ -34,16 +34,23 @@ void AnaKFPtree(
     // branches read variables
     // std::vector <int> *clus_system = nullptr;
     // std::vector <double> *clus_X = nullptr;
-    float K_S0_mass;
+    float mother_mass, mother_x, mother_y, mother_r;
 
-    tree_data->SetBranchAddress("gamma_mass", & K_S0_mass);
+    tree_data->SetBranchAddress("gamma_mass", & mother_mass);
+    tree_data->SetBranchAddress("gamma_x", & mother_x);
+    tree_data->SetBranchAddress("gamma_y", & mother_y);
+
+    mother_r = std::sqrt(mother_x*mother_x + mother_y*mother_y);
 
     Long64_t nentries = tree_data->GetEntries();
     for (Long64_t i=0; i<nentries; ++i) 
     {
         tree_data->GetEntry(i);
 
-        h1_mass->Fill(K_S0_mass);
+        if(mother_r > 30) continue; // fiducial cut
+        if(mother_r < 1)
+
+        h1_mass->Fill(mother_mass);
     }
 
     outfile.cd();
