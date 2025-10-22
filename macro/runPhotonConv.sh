@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # source /opt/sphenix/core/bin/sphenix_setup.sh -n new  # setup sPHENIX environment in the singularity container shell. Note the shell is bash by default
-source /opt/sphenix/core/bin/sphenix_setup.sh -n ana.505
+source /opt/sphenix/core/bin/sphenix_setup.sh -n ana.506
 
 # Additional commands for my local environment
 export SPHENIX=/sphenix/u/jzhang1
