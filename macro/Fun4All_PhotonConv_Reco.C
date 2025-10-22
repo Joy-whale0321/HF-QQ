@@ -85,7 +85,7 @@ R__LOAD_LIBRARY(libzdcinfo.so)
 
 // trkr506:calo468 - 5:1
 // trkr506:calo509 - 10:1
-// 预筛 KFP：用 pt / chi2/ndf / ndf / crossing 控制规模（不依赖子探测器命中接口）
+// pre-select KFP：using pt / chi2/ndf / ndf / crossing control to check the max pairs
 class PreKFPFilter : public SubsysReco {
  public:
     PreKFPFilter(double min_pt=0.5, double max_chi2ndf=30.0, unsigned min_ndf=30,
@@ -410,72 +410,72 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->saveTrackContainer(false);
     kfparticle->magFieldFile("FIELDMAP_TRACKING");
 
-    // //PV to SV cuts
-    // kfparticle->constrainToPrimaryVertex(false); // JY - for photon conversion, do not constrain to PV
-    // kfparticle->setMotherIPchi2(FLT_MAX);
-    // kfparticle->setFlightDistancechi2(-1.);
-    // kfparticle->setMinDIRA(0.99); // JY - photon conversion is very collinear
-    // kfparticle->setDecayLengthRange(0.5, 30); // JY - photon conversion happens in the material
-    // kfparticle->setDecayLengthRange_XY(0.5, 20); // JY - photon conversion happens in the material
-    // kfparticle->setDecayTimeRange_XY(-10000, FLT_MAX);
-    // kfparticle->setDecayTimeRange(-10000, FLT_MAX);
-    // kfparticle->setMinDecayTimeSignificance(-1e5);
-    // kfparticle->setMinDecayLengthSignificance(1.0); // JY
-    // kfparticle->setMinDecayLengthSignificance_XY(2.0); // JY
-    // kfparticle->setMaximumDaughterDCA_XY(0.3); // JY 
-    // kfparticle->setMaximumDaughterDCA(0.3); // JY
-
-    // //Track parameters
-    // kfparticle->bunchCrossingZeroOnly(true);
-    // kfparticle->setMinMVTXhits(0); // JY
-    // kfparticle->setMinINTThits(0); // JY
-    // kfparticle->setMinTPChits(25); // JY
-    // kfparticle->setMinimumTrackPT(0.5);
-    // kfparticle->setMaximumTrackPTchi2(FLT_MAX);
-    // kfparticle->setMinimumTrackIPchi2(-1.);
-    // kfparticle->setMinimumTrackIP(-1.);
-    // kfparticle->setMaximumTrackchi2nDOF(300.); // JY
-
     //PV to SV cuts
-    kfparticle->constrainToPrimaryVertex(false);
+    kfparticle->constrainToPrimaryVertex(false); // JY - for photon conversion, do not constrain to PV
     kfparticle->setMotherIPchi2(FLT_MAX);
     kfparticle->setFlightDistancechi2(-1.);
-    kfparticle->setMinDIRA(-1.1);
-    kfparticle->setDecayLengthRange(0., FLT_MAX);
-    kfparticle->setDecayLengthRange_XY(-10000, FLT_MAX);
+    kfparticle->setMinDIRA(0.99); // JY - photon conversion is very collinear
+    kfparticle->setDecayLengthRange(0.5, 30); // JY - photon conversion happens in the material
+    kfparticle->setDecayLengthRange_XY(0.5, 20); // JY - photon conversion happens in the material
     kfparticle->setDecayTimeRange_XY(-10000, FLT_MAX);
     kfparticle->setDecayTimeRange(-10000, FLT_MAX);
     kfparticle->setMinDecayTimeSignificance(-1e5);
-    kfparticle->setMinDecayLengthSignificance(-1e5);
-    kfparticle->setMinDecayLengthSignificance_XY(-1e5);
-    kfparticle->setMaximumDaughterDCA_XY(FLT_MAX);
-    kfparticle->setMaximumDaughterDCA(FLT_MAX);
-    
+    kfparticle->setMinDecayLengthSignificance(1.0); // JY
+    kfparticle->setMinDecayLengthSignificance_XY(2.0); // JY
+    kfparticle->setMaximumDaughterDCA_XY(0.3); // JY 
+    kfparticle->setMaximumDaughterDCA(0.3); // JY
+
     //Track parameters
     kfparticle->bunchCrossingZeroOnly(true);
-    kfparticle->setMinMVTXhits(0);
-    kfparticle->setMinINTThits(0);
-    kfparticle->setMinTPChits(25);
+    kfparticle->setMinMVTXhits(0); // JY
+    kfparticle->setMinINTThits(0); // JY
+    kfparticle->setMinTPChits(25); // JY
     kfparticle->setMinimumTrackPT(0.5);
     kfparticle->setMaximumTrackPTchi2(FLT_MAX);
     kfparticle->setMinimumTrackIPchi2(-1.);
     kfparticle->setMinimumTrackIP(-1.);
-    kfparticle->setMaximumTrackchi2nDOF(300.);
+    kfparticle->setMaximumTrackchi2nDOF(300.); // JY
 
-    //Track-Calo matching
-    kfparticle->set_emcal_radius_user(new_cemc_rad);
-    //narrow window
-    // kfparticle->set_dphi_cut_low(-0.02); //rad
-    // kfparticle->set_dphi_cut_high(0.09); //rad
-    // kfparticle->set_dz_cut_low(-4); //cm
-    // kfparticle->set_dz_cut_high(4); //cm
-    //loose window
-    kfparticle->set_dphi_cut_low(-0.2); //rad
-    kfparticle->set_dphi_cut_high(0.2); //rad
-    kfparticle->set_dz_cut_low(-10); //cm
-    kfparticle->set_dz_cut_high(10); //cm
-    kfparticle->set_emcal_e_low_cut(0.2); //GeV
-    kfparticle->requireTrackEMCalMatch(true);
+    // //PV to SV cuts
+    // kfparticle->constrainToPrimaryVertex(false);
+    // kfparticle->setMotherIPchi2(FLT_MAX);
+    // kfparticle->setFlightDistancechi2(-1.);
+    // kfparticle->setMinDIRA(-1.1);
+    // kfparticle->setDecayLengthRange(0., FLT_MAX);
+    // kfparticle->setDecayLengthRange_XY(-10000, FLT_MAX);
+    // kfparticle->setDecayTimeRange_XY(-10000, FLT_MAX);
+    // kfparticle->setDecayTimeRange(-10000, FLT_MAX);
+    // kfparticle->setMinDecayTimeSignificance(-1e5);
+    // kfparticle->setMinDecayLengthSignificance(-1e5);
+    // kfparticle->setMinDecayLengthSignificance_XY(-1e5);
+    // kfparticle->setMaximumDaughterDCA_XY(FLT_MAX);
+    // kfparticle->setMaximumDaughterDCA(FLT_MAX);
+    
+    // //Track parameters
+    // kfparticle->bunchCrossingZeroOnly(true);
+    // kfparticle->setMinMVTXhits(0);
+    // kfparticle->setMinINTThits(0);
+    // kfparticle->setMinTPChits(25);
+    // kfparticle->setMinimumTrackPT(0.5);
+    // kfparticle->setMaximumTrackPTchi2(FLT_MAX);
+    // kfparticle->setMinimumTrackIPchi2(-1.);
+    // kfparticle->setMinimumTrackIP(-1.);
+    // kfparticle->setMaximumTrackchi2nDOF(300.);
+
+    // //Track-Calo matching
+    // kfparticle->set_emcal_radius_user(new_cemc_rad);
+    // //narrow window
+    // // kfparticle->set_dphi_cut_low(-0.02); //rad
+    // // kfparticle->set_dphi_cut_high(0.09); //rad
+    // // kfparticle->set_dz_cut_low(-4); //cm
+    // // kfparticle->set_dz_cut_high(4); //cm
+    // //loose window
+    // kfparticle->set_dphi_cut_low(-0.2); //rad
+    // kfparticle->set_dphi_cut_high(0.2); //rad
+    // kfparticle->set_dz_cut_low(-10); //cm
+    // kfparticle->set_dz_cut_high(10); //cm
+    // kfparticle->set_emcal_e_low_cut(0.2); //GeV
+    // kfparticle->requireTrackEMCalMatch(true);
 
     //Vertex parameters
     kfparticle->setMaximumVertexchi2nDOF(30); // JY - from a vertex for pair electron
