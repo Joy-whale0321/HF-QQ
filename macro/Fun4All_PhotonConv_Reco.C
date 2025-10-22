@@ -478,7 +478,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     // kfparticle->requireTrackEMCalMatch(true);
 
     //Vertex parameters
-    kfparticle->setMaximumVertexchi2nDOF(30); // JY - from a vertex for pair electron
+    kfparticle->setMaximumVertexchi2nDOF(FLT_MAX); // FLT_MAX / JY - from a vertex for pair electron
 
     //Parent parameters
     kfparticle->setMotherPT(0);
