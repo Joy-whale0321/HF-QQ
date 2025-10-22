@@ -437,7 +437,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     // kfparticle->setMaximumTrackchi2nDOF(300.); // JY
 
     //PV to SV cuts
-    kfparticle->constrainToPrimaryVertex(true);
+    kfparticle->constrainToPrimaryVertex(false);
     kfparticle->setMotherIPchi2(FLT_MAX);
     kfparticle->setFlightDistancechi2(-1.);
     kfparticle->setMinDIRA(-1.1);
