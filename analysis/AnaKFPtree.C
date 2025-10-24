@@ -7,17 +7,17 @@
 #include <cmath>
 
 void AnaKFPtree(
-    // const char* filename="/mnt/e/sphenix/HF-QQ/output/Conv_reco_4M.root",
-    const char* filename="/mnt/e/sphenix/HF-QQ/output/Conv_bkgreco_4M.root",
-    // const char* filename="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/output/PhotonConv/PhotonConv_reco_likesign/Reconstructed/53046/Conv_bkgreco_4M.root",
+    // const char* filename="/mnt/e/sphenix/HF-QQ/output/Conv_reco_4M_match.root",
+    // const char* filename="/mnt/e/sphenix/HF-QQ/output/Conv_bkgreco_4M_match.root",
+    const char* filename="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/output/PhotonConv/PhotonConv_reco/Reconstructed/53046/Conv_reco_4M.root",
     const char* treename="DecayTree",
-    // const char* outputname="/mnt/e/sphenix/HF-QQ/output/Conv_reco_4M_ana.root"
-    const char* outputname="/mnt/e/sphenix/HF-QQ/output/Conv_bkgreco_4M_ana.root"
-    // const char* outputname="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/analysis/output/Conv_bkgreco_4M_ana.root"
+    // const char* outputname="/mnt/e/sphenix/HF-QQ/output/Conv_reco_4M_match_ana.root"
+    // const char* outputname="/mnt/e/sphenix/HF-QQ/output/Conv_bkgreco_4M_match_ana.root"
+    const char* outputname="/sphenix/user/jzhang1/PhysicsAna/HF-QQ/analysis/output/Conv_reco_4M_match_ana.root"
 ) 
 {
     TFile outfile(outputname, "RECREATE");
-    TH1D *h1_mass = new TH1D("h1_mass", "h1_mass; mass [GeV]; count", 100, 0, 1);
+    TH1D *h1_mass = new TH1D("h1_mass", "h1_mass; mass [GeV]; count", 500, 0, 0.5);
     TH1D *h1_Rxy = new TH1D("h1_Rxy", "h1_Rxy; Rxy [cm]; count", 300, 0, 30);
     
     TFile *file_in = TFile::Open(filename);
