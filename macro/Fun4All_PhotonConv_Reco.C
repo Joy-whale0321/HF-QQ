@@ -460,7 +460,7 @@ void Fun4All_PhotonConv_Reco(
     // 过滤掉共享 cluster 的轨迹（全部丢弃版）
     auto share_veto = new ClusterShareVeto("SvtxTrackMap", "SvtxTrackMap_NoShare", /*keep_best_in_conflict=*/false);
     share_veto->Verbosity(1); 
-    // se->registerSubsystem(share_veto);
+    se->registerSubsystem(share_veto);
 
     // output directory and file name setting
     string trailer = "_" + nice_runnumber.str() + "_" + nice_segment.str() + "_" + nice_index.str() + ".root";
