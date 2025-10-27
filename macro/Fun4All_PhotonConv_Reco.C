@@ -165,7 +165,7 @@ public:
   int InitRun(PHCompositeNode* topNode) override {
     // 拿到 DST 节点并创建/复用输出 TrackMap 节点
     auto dstNode = findNode::getClass<PHCompositeNode>(topNode,"DST");
-    if(!dstNode) return Fun4AllReturnCodes::ABORTEVENT;
+    // if(!dstNode) return Fun4AllReturnCodes::ABORTEVENT;
 
     auto out = findNode::getClass<SvtxTrackMap>(topNode, m_outMap);
     if (!out) {
