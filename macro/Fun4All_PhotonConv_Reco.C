@@ -148,6 +148,124 @@ class PreKFPFilter : public SubsysReco {
     unsigned long long m_maxPairs;
 };
 
+class ClusterShareVeto : public SubsysReco {
+public:
+  ClusterShareVeto(std::string inMap="SvtxTrackMap",
+                   std::string outMap="SvtxTrackMap_NoShare",
+                   bool keep_best_in_conflict=false)
+  : SubsysReco("ClusterShareVeto"),
+    m_inMap(std::move(inMap)),
+    m_outMap(std::move(outMap)),
+    m_keepBest(keep_best_in_conflict) {}
+
+  int InitRun(PHCompositeNode* topNode) override {
+    auto dstNode = findNode::getClass<PHCompositeNode>(topNode,"DST");
+    if(!dstNode) return Fun4AllReturnCodes::ABORTEVENT;
+    // 创建输出节点（不存在则创建，存在则复用）
+    auto out = findNode::getClass<SvtxTrackMap>(topNode, m_outMap);
+    if (!out) {
+      out = new SvtxTrackMap_v2();
+      dstNode->addNode(new PHIODataNode<PHObject>(out, m_outMap, "PHObject"));
+    }
+    return Fun4AllReturnCodes::EVENT_OK;
+  }
+
+  int process_event(PHCompositeNode* topNode) override {
+    auto in  = findNode::getClass<SvtxTrackMap>(topNode, m_inMap);
+    auto out = findNode::getClass<SvtxTrackMap>(topNode, m_outMap);
+    if (!in || !out) return Fun4AllReturnCodes::EVENT_OK;
+    out->clear();
+
+    // cluskey -> 使用它的 track id 列表
+    std::unordered_map<TrkrDefs::cluskey, std::vector<unsigned int>> used_by;
+    used_by.reserve(in->size()*30);
+
+    std::vector<unsigned int> tids; tids.reserve(in->size());
+    for (auto it=in->begin(); it!=in->end(); ++it) {
+      tids.push_back(it->first);
+      const SvtxTrack* t = it->second; if(!t) continue;
+      for (auto ck : t->get_cluster_keys()) used_by[ck].push_back(it->first);
+    }
+
+    // 标记所有“涉及共享”的 track
+    std::unordered_set<unsigned int> bad;
+    for (auto &kv : used_by) {
+      if (kv.second.size() > 1) bad.insert(kv.second.begin(), kv.second.end());
+    }
+
+    if (!m_keepBest) {
+      // 方案 A：凡是参与共享的轨迹全部丢弃
+      for (auto tid : tids) {
+        if (bad.count(tid)) continue;
+        const SvtxTrack* t = in->find(tid)->second;
+        if (!t) continue;
+        out->insert( dynamic_cast<SvtxTrack*>(t->CloneMe()) );
+      }
+    } else {
+      // 方案 B：每个“冲突组”只保留最好的一条
+      // 将共享关系粗略并到一个组里
+      std::unordered_map<unsigned int,unsigned int> parent;
+      auto findp=[&](auto self,unsigned int x)->unsigned int{
+        if (!parent.count(x) || parent[x]==x) return parent[x]=x;
+        return parent[x]=self(self,parent[x]);
+      };
+      auto unite=[&](unsigned int a,unsigned int b){
+        a=findp(findp,a); b=findp(findp,b); if(a!=b) parent[b]=a;
+      };
+      for (auto tid: tids) parent[tid]=tid;
+      for (auto &kv : used_by) {
+        auto &vec = kv.second;
+        if (vec.size()<2) continue;
+        for (size_t i=1;i<vec.size();++i) unite(vec[0], vec[i]);
+      }
+
+      auto score=[&](const SvtxTrack* t){
+        int ndf = std::max(1,(int)t->get_ndf());
+        double chi2ndf = t->get_chisq()/ndf;
+        int nhits_tpc = 0;
+        for (auto ck : t->get_cluster_keys())
+          if (TrkrDefs::getTrkrId(ck)==TrkrDefs::tpcId) nhits_tpc++;
+        // chi2/ndf 越小越好，其次 ndf/TPC hits 越多越好
+        return std::make_tuple(chi2ndf, -ndf, -nhits_tpc);
+      };
+
+      // root -> best tid
+      std::unordered_map<unsigned int,unsigned int> best;
+      for (auto tid : tids) {
+        unsigned int r = findp(findp,tid);
+        const SvtxTrack* t = in->find(tid)->second; if(!t) continue;
+        if (!best.count(r)) best[r]=tid;
+        else {
+          const SvtxTrack* tb = in->find(best[r])->second;
+          if (score(t) < score(tb)) best[r]=tid;
+        }
+      }
+      // 输出时：非共享的直接保留；共享组只保留 best
+      std::unordered_set<unsigned int> keep_set(best.begin(), best.end());
+      for (auto tid : tids) {
+        bool involved = bad.count(tid);
+        if (involved) {
+          unsigned int r = findp(findp,tid);
+          if (keep_set.count(r)==0 || best[r]!=tid) continue;
+        }
+        const SvtxTrack* t = in->find(tid)->second; if(!t) continue;
+        out->insert( dynamic_cast<SvtxTrack*>(t->CloneMe()) );
+      }
+    }
+
+    if (Verbosity()>0) {
+      std::cout << "[ClusterShareVeto] in=" << in->size()
+                << " shared_tracks=" << bad.size()
+                << " out=" << out->size() << std::endl;
+    }
+    return Fun4AllReturnCodes::EVENT_OK;
+  }
+
+private:
+  std::string m_inMap, m_outMap;
+  bool m_keepBest;
+};
+
 void Fun4All_PhotonConv_Reco(
     const int nEvents = 100,
     const std::string trkr_clusterfilename = "DST_TRKR_CLUSTER_run2pp_ana505_2024p023_v001-00053046-00002.root",
@@ -322,6 +440,11 @@ void Fun4All_PhotonConv_Reco(
     mon->Verbosity(1);           // 设为 1 或 2，多点日志
     // se->registerSubsystem(mon);
 
+    // 过滤掉共享 cluster 的轨迹（全部丢弃版）
+    auto share_veto = new ClusterShareVeto("SvtxTrackMap", "SvtxTrackMap_NoShare", /*keep_best_in_conflict=*/false);
+    share_veto->Verbosity(1);  // 看日志可设 1
+    se->registerSubsystem(share_veto);
+
     // output directory and file name setting
     string trailer = "_" + nice_runnumber.str() + "_" + nice_segment.str() + "_" + nice_index.str() + ".root";
 
@@ -391,7 +514,7 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->Verbosity(0);
     kfparticle->setDecayDescriptor(decaydescriptor);
 
-    kfparticle->setTrackMapNodeName(trackmapName);
+    kfparticle->setTrackMapNodeName("SvtxTrackMap_NoShare"); // trackmapName
     kfparticle->setContainerName(containerName);
 
     //Basic node selection and configuration
