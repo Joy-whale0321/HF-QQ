@@ -543,7 +543,8 @@ void KFPReco(std::string module_name = "KFPReco", std::string decaydescriptor = 
     kfparticle->Verbosity(0);
     kfparticle->setDecayDescriptor(decaydescriptor);
 
-    kfparticle->setTrackMapNodeName("SvtxTrackMap_NoShare"); // trackmapName
+    kfparticle->setTrackMapNodeName(trackmapName);
+    // kfparticle->setTrackMapNodeName("SvtxTrackMap_NoShare"); // trackmapName
     kfparticle->setContainerName(containerName);
 
     //Basic node selection and configuration
