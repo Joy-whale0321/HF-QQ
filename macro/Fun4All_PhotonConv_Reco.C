@@ -466,13 +466,13 @@ void Fun4All_PhotonConv_Reco(
         /*bunch0_only=*/false,     // 先不要限定 crossing
         /*max_pairs=*/ULLONG_MAX   // 永不触发丢事件
     );
-    mon->Verbosity(1);           // 设为 1 或 2，多点日志
-    // se->registerSubsystem(mon);
+    mon->Verbosity(1);
+    se->registerSubsystem(mon);
 
     // 过滤掉共享 cluster 的轨迹（全部丢弃版）
     auto share_veto = new ClusterShareVeto("SvtxTrackMap", "SvtxTrackMap_NoShare", /*keep_best_in_conflict=*/false);
-    share_veto->Verbosity(1);  // 看日志可设 1
-    se->registerSubsystem(share_veto);
+    share_veto->Verbosity(1); 
+    // se->registerSubsystem(share_veto);
 
     // output directory and file name setting
     string trailer = "_" + nice_runnumber.str() + "_" + nice_segment.str() + "_" + nice_index.str() + ".root";
