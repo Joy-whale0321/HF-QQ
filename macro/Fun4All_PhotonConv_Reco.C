@@ -154,6 +154,7 @@ class PreKFPFilter : public SubsysReco {
     unsigned long long m_maxPairs;
 };
 
+// ======================= In-place 版 ClusterShareVeto =======================
 class ClusterShareVeto : public SubsysReco {
 public:
   ClusterShareVeto(std::string inMap="SvtxTrackMap",
@@ -164,24 +165,18 @@ public:
     m_outMap(std::move(outMap)),
     m_keepBest(keep_best_in_conflict) {}
 
-  int InitRun(PHCompositeNode* topNode) override {
-    // 拿到 DST 节点并创建/复用输出 TrackMap 节点
-    auto dstNode = findNode::getClass<PHCompositeNode>(topNode,"DST");
-    // if(!dstNode) return Fun4AllReturnCodes::ABORTEVENT;
-
-    auto out = findNode::getClass<SvtxTrackMap>(topNode, m_outMap);
-    if (!out) {
-      out = new SvtxTrackMap_v2();
-      dstNode->addNode(new PHIODataNode<PHObject>(out, m_outMap, "PHObject"));
-    }
+  // 不在 BeginRun 创建任何节点，避免中断
+  int InitRun(PHCompositeNode* /*topNode*/) override {
+    if (Verbosity()>0) std::cout << "[ClusterShareVeto] InitRun OK (in-place)\n";
     return Fun4AllReturnCodes::EVENT_OK;
   }
 
   int process_event(PHCompositeNode* topNode) override {
     auto in  = findNode::getClass<SvtxTrackMap>(topNode, m_inMap);
-    auto out = findNode::getClass<SvtxTrackMap>(topNode, m_outMap);
-    if (!in || !out) return Fun4AllReturnCodes::EVENT_OK;
-    out->clear();
+    if (!in) {
+      if (Verbosity()>0) std::cout << "[ClusterShareVeto] no input map '"<<m_inMap<<"'\n";
+      return Fun4AllReturnCodes::EVENT_OK;
+    }
 
     // 1) 统计：每个 cluskey 被哪些 track 使用
     std::unordered_map<TrkrDefs::cluskey, std::vector<unsigned int>> used_by;
@@ -189,44 +184,43 @@ public:
 
     std::vector<unsigned int> tids; tids.reserve(in->size());
     for (auto it=in->begin(); it!=in->end(); ++it) {
-      tids.push_back(it->first);
+      const unsigned int tid = it->first;
       const SvtxTrack* t = it->second; 
       if(!t) continue;
 
+      tids.push_back(tid);
       for (auto itc = t->begin_cluster_keys(); itc != t->end_cluster_keys(); ++itc) {
         const auto ck = *itc;
-        used_by[ck].push_back(it->first);
+        used_by[ck].push_back(tid);
       }
     }
 
     // 2) 标记所有“涉及共享”的 track
-    std::unordered_set<unsigned int> bad;
+    std::unordered_set<unsigned int> shared;
     for (auto &kv : used_by) {
       if (kv.second.size() > 1) {
-        bad.insert(kv.second.begin(), kv.second.end());
+        shared.insert(kv.second.begin(), kv.second.end());
       }
     }
 
-    // A) 简单模式：凡涉及共享的轨迹全部剔除
     if (!m_keepBest) {
-      for (auto tid : tids) {
-        if (bad.count(tid)) continue;
-        const SvtxTrack* t = in->find(tid)->second;
-        if (!t) continue;
-        out->insert( dynamic_cast<SvtxTrack*>(t->CloneMe()) );
+      // A) 简单模式：凡涉及共享的轨迹全部就地剔除
+      size_t removed = 0;
+      for (auto tid : shared) {
+        if (in->erase(tid)) ++removed;
       }
       if (Verbosity()>0) {
-        std::cout << "[ClusterShareVeto:A] in=" << in->size()
-                  << " shared_tracks=" << bad.size()
-                  << " out=" << out->size() << std::endl;
+        std::cout << "[ClusterShareVeto:A in-place] in=" << tids.size()
+                  << " shared_tracks=" << shared.size()
+                  << " removed=" << removed
+                  << " remain=" << in->size() << std::endl;
       }
       return Fun4AllReturnCodes::EVENT_OK;
     }
 
     // B) 保留冲突组里“最好”的一条（chi2/ndf 最小，其次 ndf/TPC hits 大）
-    // 2.1 把共享关系并查集成组
     std::unordered_map<unsigned int,unsigned int> parent;
-    auto findp = [&](auto self, unsigned int x)->unsigned int {
+    auto findp = [&](auto&& self, unsigned int x)->unsigned int {
       if (!parent.count(x) || parent[x]==x) return parent[x]=x;
       return parent[x] = self(self,parent[x]);
     };
@@ -255,6 +249,7 @@ public:
     // 2.2 每个组挑“最好”的 tid
     std::unordered_map<unsigned int,unsigned int> best; // root -> tid
     for (auto tid : tids) {
+      if (!shared.count(tid)) continue; // 非共享无需评分
       const unsigned int r = findp(findp,tid);
       const SvtxTrack* t = in->find(tid)->second; 
       if(!t) continue;
@@ -265,35 +260,28 @@ public:
       }
     }
 
-    // 2.3 输出：非共享的直接保留；共享组只保留 best[组]
-    std::unordered_set<unsigned int> keep_set;
-    keep_set.reserve(best.size());
-    for (auto& kv : best) keep_set.insert(kv.second);
-
-    for (auto tid : tids) {
-      const bool involved = bad.count(tid);
-      if (involved) {
-        const unsigned int r = findp(findp,tid);
-        if (!best.count(r) || best[r] != tid) continue; // 不是该组最佳 → 丢弃
-      }
-      const SvtxTrack* t = in->find(tid)->second; 
-      if(!t) continue;
-      out->insert( dynamic_cast<SvtxTrack*>(t->CloneMe()) );
+    // 2.3 就地删除：共享组只保留 best[组]，其余删掉
+    size_t removed = 0;
+    for (auto tid : shared) {
+      const unsigned int r = findp(findp,tid);
+      if (best.count(r) && best[r] == tid) continue; // 该组最佳 → 保留
+      if (in->erase(tid)) ++removed;
     }
 
     if (Verbosity()>0) {
-      std::cout << "[ClusterShareVeto:B] in=" << in->size()
-                << " shared_tracks=" << bad.size()
+      std::cout << "[ClusterShareVeto:B in-place] shared=" << shared.size()
                 << " groups=" << best.size()
-                << " out=" << out->size() << std::endl;
+                << " removed=" << removed
+                << " remain=" << in->size() << std::endl;
     }
     return Fun4AllReturnCodes::EVENT_OK;
   }
 
 private:
-  std::string m_inMap, m_outMap;
+  std::string m_inMap, m_outMap; // m_outMap 保留但不使用（in-place）
   bool m_keepBest;
 };
+// ======================= In-place 版 ClusterShareVeto 结束 =======================
 
 void Fun4All_PhotonConv_Reco(
     const int nEvents = 100,
