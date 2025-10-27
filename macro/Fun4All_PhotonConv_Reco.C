@@ -467,7 +467,7 @@ void Fun4All_PhotonConv_Reco(
         /*max_pairs=*/ULLONG_MAX   // 永不触发丢事件
     );
     mon->Verbosity(1);
-    // se->registerSubsystem(mon);
+    se->registerSubsystem(mon);
 
     // 过滤掉共享 cluster 的轨迹（全部丢弃版）
     auto share_veto = new ClusterShareVeto("SvtxTrackMap", "SvtxTrackMap_NoShare", /*keep_best_in_conflict=*/false);
