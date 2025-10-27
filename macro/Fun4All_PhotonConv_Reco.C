@@ -49,6 +49,10 @@
 
 #include <calotrigger/TriggerRunInfoReco.h>
 
+#include <phool/PHCompositeNode.h>
+#include <phool/PHIODataNode.h>
+#include <phool/PHObject.h>
+
 #include <stdio.h>
 
 #pragma GCC diagnostic push
@@ -159,9 +163,10 @@ public:
     m_keepBest(keep_best_in_conflict) {}
 
   int InitRun(PHCompositeNode* topNode) override {
+    // 拿到 DST 节点并创建/复用输出 TrackMap 节点
     auto dstNode = findNode::getClass<PHCompositeNode>(topNode,"DST");
     if(!dstNode) return Fun4AllReturnCodes::ABORTEVENT;
-    // 创建输出节点（不存在则创建，存在则复用）
+
     auto out = findNode::getClass<SvtxTrackMap>(topNode, m_outMap);
     if (!out) {
       out = new SvtxTrackMap_v2();
@@ -176,86 +181,108 @@ public:
     if (!in || !out) return Fun4AllReturnCodes::EVENT_OK;
     out->clear();
 
-    // cluskey -> 使用它的 track id 列表
+    // 1) 统计：每个 cluskey 被哪些 track 使用
     std::unordered_map<TrkrDefs::cluskey, std::vector<unsigned int>> used_by;
     used_by.reserve(in->size()*30);
 
     std::vector<unsigned int> tids; tids.reserve(in->size());
     for (auto it=in->begin(); it!=in->end(); ++it) {
       tids.push_back(it->first);
-      const SvtxTrack* t = it->second; if(!t) continue;
-      for (auto ck : t->get_cluster_keys()) used_by[ck].push_back(it->first);
+      const SvtxTrack* t = it->second; 
+      if(!t) continue;
+
+      for (auto itc = t->begin_cluster_keys(); itc != t->end_cluster_keys(); ++itc) {
+        const auto ck = *itc;
+        used_by[ck].push_back(it->first);
+      }
     }
 
-    // 标记所有“涉及共享”的 track
+    // 2) 标记所有“涉及共享”的 track
     std::unordered_set<unsigned int> bad;
     for (auto &kv : used_by) {
-      if (kv.second.size() > 1) bad.insert(kv.second.begin(), kv.second.end());
+      if (kv.second.size() > 1) {
+        bad.insert(kv.second.begin(), kv.second.end());
+      }
     }
 
+    // A) 简单模式：凡涉及共享的轨迹全部剔除
     if (!m_keepBest) {
-      // 方案 A：凡是参与共享的轨迹全部丢弃
       for (auto tid : tids) {
         if (bad.count(tid)) continue;
         const SvtxTrack* t = in->find(tid)->second;
         if (!t) continue;
         out->insert( dynamic_cast<SvtxTrack*>(t->CloneMe()) );
       }
-    } else {
-      // 方案 B：每个“冲突组”只保留最好的一条
-      // 将共享关系粗略并到一个组里
-      std::unordered_map<unsigned int,unsigned int> parent;
-      auto findp=[&](auto self,unsigned int x)->unsigned int{
-        if (!parent.count(x) || parent[x]==x) return parent[x]=x;
-        return parent[x]=self(self,parent[x]);
-      };
-      auto unite=[&](unsigned int a,unsigned int b){
-        a=findp(findp,a); b=findp(findp,b); if(a!=b) parent[b]=a;
-      };
-      for (auto tid: tids) parent[tid]=tid;
-      for (auto &kv : used_by) {
-        auto &vec = kv.second;
-        if (vec.size()<2) continue;
-        for (size_t i=1;i<vec.size();++i) unite(vec[0], vec[i]);
+      if (Verbosity()>0) {
+        std::cout << "[ClusterShareVeto:A] in=" << in->size()
+                  << " shared_tracks=" << bad.size()
+                  << " out=" << out->size() << std::endl;
       }
+      return Fun4AllReturnCodes::EVENT_OK;
+    }
 
-      auto score=[&](const SvtxTrack* t){
-        int ndf = std::max(1,(int)t->get_ndf());
-        double chi2ndf = t->get_chisq()/ndf;
-        int nhits_tpc = 0;
-        for (auto ck : t->get_cluster_keys())
-          if (TrkrDefs::getTrkrId(ck)==TrkrDefs::tpcId) nhits_tpc++;
-        // chi2/ndf 越小越好，其次 ndf/TPC hits 越多越好
-        return std::make_tuple(chi2ndf, -ndf, -nhits_tpc);
-      };
+    // B) 保留冲突组里“最好”的一条（chi2/ndf 最小，其次 ndf/TPC hits 大）
+    // 2.1 把共享关系并查集成组
+    std::unordered_map<unsigned int,unsigned int> parent;
+    auto findp = [&](auto self, unsigned int x)->unsigned int {
+      if (!parent.count(x) || parent[x]==x) return parent[x]=x;
+      return parent[x] = self(self,parent[x]);
+    };
+    auto unite = [&](unsigned int a,unsigned int b){
+      a=findp(findp,a); b=findp(findp,b); if(a!=b) parent[b]=a;
+    };
+    for (auto tid: tids) parent[tid]=tid;
+    for (auto &kv : used_by) {
+      auto &vec = kv.second;
+      if (vec.size()<2) continue;
+      for (size_t i=1;i<vec.size();++i) unite(vec[0], vec[i]);
+    }
 
-      // root -> best tid
-      std::unordered_map<unsigned int,unsigned int> best;
-      for (auto tid : tids) {
-        unsigned int r = findp(findp,tid);
-        const SvtxTrack* t = in->find(tid)->second; if(!t) continue;
-        if (!best.count(r)) best[r]=tid;
-        else {
-          const SvtxTrack* tb = in->find(best[r])->second;
-          if (score(t) < score(tb)) best[r]=tid;
-        }
+    auto score = [&](const SvtxTrack* t){
+      const int ndf = std::max(1, (int)t->get_ndf());
+      const double chi2ndf = t->get_chisq() / ndf;
+      int nhits_tpc = 0;
+      for (auto itc = t->begin_cluster_keys(); itc != t->end_cluster_keys(); ++itc) {
+        const auto ck = *itc;
+        if (TrkrDefs::getTrkrId(ck) == TrkrDefs::tpcId) nhits_tpc++;
       }
-      // 输出时：非共享的直接保留；共享组只保留 best
-      std::unordered_set<unsigned int> keep_set(best.begin(), best.end());
-      for (auto tid : tids) {
-        bool involved = bad.count(tid);
-        if (involved) {
-          unsigned int r = findp(findp,tid);
-          if (keep_set.count(r)==0 || best[r]!=tid) continue;
-        }
-        const SvtxTrack* t = in->find(tid)->second; if(!t) continue;
-        out->insert( dynamic_cast<SvtxTrack*>(t->CloneMe()) );
+      // chi2/ndf 越小越好；其次 ndf/nhits_tpc 越大越好（负号保证 tuple 比较方向正确）
+      return std::make_tuple(chi2ndf, -ndf, -nhits_tpc);
+    };
+
+    // 2.2 每个组挑“最好”的 tid
+    std::unordered_map<unsigned int,unsigned int> best; // root -> tid
+    for (auto tid : tids) {
+      const unsigned int r = findp(findp,tid);
+      const SvtxTrack* t = in->find(tid)->second; 
+      if(!t) continue;
+      if (!best.count(r)) best[r]=tid;
+      else {
+        const SvtxTrack* tb = in->find(best[r])->second;
+        if (score(t) < score(tb)) best[r]=tid;
       }
     }
 
+    // 2.3 输出：非共享的直接保留；共享组只保留 best[组]
+    std::unordered_set<unsigned int> keep_set;
+    keep_set.reserve(best.size());
+    for (auto& kv : best) keep_set.insert(kv.second);
+
+    for (auto tid : tids) {
+      const bool involved = bad.count(tid);
+      if (involved) {
+        const unsigned int r = findp(findp,tid);
+        if (!best.count(r) || best[r] != tid) continue; // 不是该组最佳 → 丢弃
+      }
+      const SvtxTrack* t = in->find(tid)->second; 
+      if(!t) continue;
+      out->insert( dynamic_cast<SvtxTrack*>(t->CloneMe()) );
+    }
+
     if (Verbosity()>0) {
-      std::cout << "[ClusterShareVeto] in=" << in->size()
+      std::cout << "[ClusterShareVeto:B] in=" << in->size()
                 << " shared_tracks=" << bad.size()
+                << " groups=" << best.size()
                 << " out=" << out->size() << std::endl;
     }
     return Fun4AllReturnCodes::EVENT_OK;
