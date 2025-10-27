@@ -52,6 +52,8 @@
 #include <phool/PHCompositeNode.h>
 #include <phool/PHIODataNode.h>
 #include <phool/PHObject.h>
+#include <trackbase_historic/SvtxTrackMap_v2.h>
+#include <phool/PHDataNode.h>
 
 #include <stdio.h>
 
